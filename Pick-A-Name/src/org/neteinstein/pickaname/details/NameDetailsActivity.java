@@ -37,9 +37,13 @@ public class NameDetailsActivity extends Activity {
 			nameTV.setText(localNameModel.getName());
 
 			TextView genderTV = (TextView) findViewById(R.id.name_details_gender);
-			String str = localNameModel.getGender();
-			if ((str != null) && (!"".equalsIgnoreCase(str))) {
-				genderTV.setText(str);
+			String gender = localNameModel.getGender();
+			if ("M".equalsIgnoreCase(gender)) {
+				genderTV.setText(getString(R.string.names_allowed_male));
+			} else if ("F".equalsIgnoreCase(gender)) {
+				genderTV.setText(getString(R.string.names_allowed_female));
+			} else {
+				genderTV.setText(gender);
 			}
 
 			TextView notesTV = ((TextView) findViewById(R.id.name_details_notes));

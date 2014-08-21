@@ -12,31 +12,45 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class NamesAllowedAdapter extends CursorAdapter {
+
+	private Context context = null;
 	private LayoutInflater mLayoutInflater = null;
 
 	public NamesAllowedAdapter(Context context, Cursor cursor,
 			boolean autoRequery) {
 		super(context, cursor, autoRequery);
 
-		mLayoutInflater = LayoutInflater.from(this.mContext);
+		this.context = context;
+		this.mLayoutInflater = LayoutInflater.from(this.mContext);
 	}
 
 	public void bindView(View paramView, Context paramContext,
 			Cursor paramCursor) {
-		String name = paramCursor.getString(paramCursor
-				.getColumnIndexOrThrow(DatabaseHelper.NAMES_NAME));
+
 		TextView nameTV = (TextView) paramView
 				.findViewById(R.id.names_allowed_name);
 		if (nameTV != null) {
+			String name = paramCursor.getString(paramCursor
+					.getColumnIndexOrThrow(DatabaseHelper.NAMES_NAME));
+
 			nameTV.setText(name);
 		}
 
-		String gender = paramCursor.getString(paramCursor
-				.getColumnIndexOrThrow(DatabaseHelper.NAMES_GENDER));
 		TextView genderTV = (TextView) paramView
 				.findViewById(R.id.names_allowed_gender);
 		if (genderTV != null) {
-			genderTV.setText(gender);
+			String gender = paramCursor.getString(paramCursor
+					.getColumnIndexOrThrow(DatabaseHelper.NAMES_GENDER));
+
+			if ("M".equalsIgnoreCase(gender)) {
+				genderTV.setText(context.getString(R.string.names_allowed_male));
+			} else if ("F".equalsIgnoreCase(gender)) {
+				genderTV.setText(context
+						.getString(R.string.names_allowed_female));
+			} else {
+				genderTV.setText(gender);
+			}
+
 		}
 	}
 

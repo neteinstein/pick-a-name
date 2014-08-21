@@ -89,7 +89,7 @@ public class DatabaseAdapter {
 
 		try {
 			InputStreamReader inputStream = new InputStreamReader(context
-					.getAssets().open(AppConfiguration.ASSETS_DATABASE), "ISO-8859-1");
+					.getAssets().open(AppConfiguration.ASSETS_DATABASE), "UTF-8");
 			BufferedReader localBufferedReader = new BufferedReader(inputStream);
 
 			String str = null;

@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Portuguese Names</string>
+
+    <string name="app_name">Pick a Name</string>
     <string name="names_loading">"Starting up database...
 Please be pacient, this will happen only the first time you open the app."</string>
+
+    <!-- LIST SCREEN -->
+    <string name="names_allowed_male">Male</string>
+    <string name="names_allowed_female">Female</string>
+    
+    <!-- DETAILS SCREEN -->
+    <string name="names_details_name_label">Name:</string>
+    <string name="names_details_gender_label">Allowed Gender:</string>
+    <string name="names_details_gender_default">Both</string>
+    <string name="names_details_notes_label">Notes:</string>
+
 </resources>

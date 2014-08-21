@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:text="Nome:"
+        android:text="@string/names_details_name_label"
         android:textSize="20.0dip" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@id/name_details_name_label"
-        android:text="Sexo Permitido:"
+        android:text="@string/names_details_notes_label"
         android:textSize="20.0dip" />
 
     <TextView
@@ -38,7 +38,7 @@
         android:layout_below="@id/name_details_name"
         android:layout_toRightOf="@id/name_details_gender_label"
         android:paddingLeft="10.0dip"
-        android:text="Ambos"
+        android:text="@string/names_details_gender_default"
         android:textSize="20.0dip" />
 
     <TextView
@@ -47,7 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@id/name_details_gender_label"
-        android:text="Notas:"
+        android:text="@string/names_details_notes_label"
         android:textSize="20.0dip" />
 
     <TextView
