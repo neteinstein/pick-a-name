@@ -89,8 +89,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public boolean isDatabaseEmpty(SQLiteDatabase paramSQLiteDatabase) {
-		return paramSQLiteDatabase.rawQuery(
-				"SELECT " + NAMES_ID + " FROM " + TABLE_NAMES, null).getCount() == 0;
+
+		boolean databaseEmpty = true;
+
+		try {
+			int numberOfNames = paramSQLiteDatabase.rawQuery(
+					"SELECT " + NAMES_ID + " FROM " + TABLE_NAMES, null)
+					.getCount();
+			if (numberOfNames > 0) {
+				databaseEmpty = false;
+			}
+		} catch (Exception e) {
+			Log.e(DatabaseHelper.class.getSimpleName().toString(),
+					"isDatabaseEmpty", e);
+
+		}
+
+		return databaseEmpty;
 	}
 
 	public void resetDatabase(SQLiteDatabase paramSQLiteDatabase) {

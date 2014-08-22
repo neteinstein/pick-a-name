@@ -22,7 +22,6 @@ import android.widget.ListView;
 
 public class NamesAllowedActivity extends Activity {
 
-	private PANApp app = null;
 	private ListView listView;
 	private DatabaseAdapter database = null;
 
@@ -34,11 +33,9 @@ public class NamesAllowedActivity extends Activity {
 
 		setContentView(R.layout.screen_names_allowed);
 
-		showLoading();
 		this.listView = ((ListView) findViewById(R.id.names_allowed_listview));
 		this.listView.setOnItemClickListener(onItemClickListener);
-		this.app = ((PANApp) getApplication());
-		this.database = this.app.getAdapter();
+		this.database = PANApp.getInstance().getAdapter();
 
 		EditText localEditText = (EditText) findViewById(R.id.names_filter);
 		localEditText.addTextChangedListener(this.filterListener);
@@ -59,6 +56,8 @@ public class NamesAllowedActivity extends Activity {
 	private void checkDatabase() {
 		if (database.isDatabaseReady) {
 			populateScreen();
+		}else{
+			showLoading();
 		}
 	}
 

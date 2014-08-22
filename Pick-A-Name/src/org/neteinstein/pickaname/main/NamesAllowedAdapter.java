@@ -9,19 +9,28 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AlphabetIndexer;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class NamesAllowedAdapter extends CursorAdapter {
+public class NamesAllowedAdapter extends CursorAdapter implements
+		SectionIndexer {
 
-	private Context context = null;
+	private AlphabetIndexer mAlphabetIndexer;
+	private Context mContext = null;
 	private LayoutInflater mLayoutInflater = null;
 
 	public NamesAllowedAdapter(Context context, Cursor cursor,
 			boolean autoRequery) {
 		super(context, cursor, autoRequery);
 
-		this.context = context;
+		this.mContext = context;
 		this.mLayoutInflater = LayoutInflater.from(this.mContext);
+
+		this.mAlphabetIndexer = new AlphabetIndexer(cursor,
+				cursor.getColumnIndex(DatabaseHelper.NAMES_NAME),
+				" ABCDEFGHIJKLMNOPQRTSUVWXYZ");
+		this.mAlphabetIndexer.setCursor(cursor);
 	}
 
 	public void bindView(View paramView, Context paramContext,
@@ -43,9 +52,10 @@ public class NamesAllowedAdapter extends CursorAdapter {
 					.getColumnIndexOrThrow(DatabaseHelper.NAMES_GENDER));
 
 			if ("M".equalsIgnoreCase(gender)) {
-				genderTV.setText(context.getString(R.string.names_allowed_male));
+				genderTV.setText(mContext
+						.getString(R.string.names_allowed_male));
 			} else if ("F".equalsIgnoreCase(gender)) {
-				genderTV.setText(context
+				genderTV.setText(mContext
 						.getString(R.string.names_allowed_female));
 			} else {
 				genderTV.setText(gender);
@@ -58,5 +68,20 @@ public class NamesAllowedAdapter extends CursorAdapter {
 		View view = this.mLayoutInflater.inflate(
 				R.layout.list_line_names_allowed, parent, false);
 		return view;
+	}
+
+	@Override
+	public Object[] getSections() {
+		return mAlphabetIndexer.getSections();
+	}
+
+	@Override
+	public int getPositionForSection(int sectionIndex) {
+		return mAlphabetIndexer.getPositionForSection(sectionIndex);
+	}
+
+	@Override
+	public int getSectionForPosition(int position) {
+		return mAlphabetIndexer.getSectionForPosition(position);
 	}
 }
