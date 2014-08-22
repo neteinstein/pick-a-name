@@ -92,21 +92,31 @@ public class DatabaseAdapter {
 					.getAssets().open(AppConfiguration.ASSETS_DATABASE), "UTF-8");
 			BufferedReader localBufferedReader = new BufferedReader(inputStream);
 
-			String str = null;
+			String sqlQuery = null;
 
 			do {
-				str = localBufferedReader.readLine();
+				sqlQuery = localBufferedReader.readLine();
+				
+				if(sqlQuery == null) break;
+				
+				sqlQuery = sqlQuery.replace("%1", DatabaseHelper.NAMES_ID);
+				sqlQuery = sqlQuery.replace("%2", DatabaseHelper.NAMES_NAME);
+				sqlQuery = sqlQuery.replace("%3", DatabaseHelper.NAMES_GENDER);
+				sqlQuery = sqlQuery.replace("%4", DatabaseHelper.NAMES_ALLOWED);
+				sqlQuery = sqlQuery.replace("%5", DatabaseHelper.NAMES_NOTES);
+				
 				Log.d(DatabaseAdapter.class.getSimpleName().toString(),
-						"SQL --->" + str);
+						"SQL --->" + sqlQuery);
+				
 				try {
-					this.database.execSQL(str);
-					str = localBufferedReader.readLine();
+					this.database.execSQL(sqlQuery);
+					sqlQuery = localBufferedReader.readLine();
 				} catch (Exception e) {
-					Log.d(DatabaseAdapter.class.getSimpleName().toString(),
+					Log.e(DatabaseAdapter.class.getSimpleName().toString(),
 							"SQL --->" + e);
 				}
 
-			} while (str != null);
+			} while (sqlQuery != null);
 		} catch (IOException e) {
 			Log.d(DatabaseAdapter.class.getSimpleName().toString(),
 					AppConfiguration.ASSETS_DATABASE, e);
