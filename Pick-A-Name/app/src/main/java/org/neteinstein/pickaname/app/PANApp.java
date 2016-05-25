@@ -1,56 +1,60 @@
 package org.neteinstein.pickaname.app;
 
-import org.androidannotations.annotations.Background;
 import org.neteinstein.pickaname.database.DatabaseAdapter;
 
 import android.app.Application;
+
 import de.greenrobot.event.EventBus;
 
 public class PANApp extends Application {
-	
-	private DatabaseAdapter adapter = null;
-	private EventBus eventBus = null;
 
-	private static PANApp singleton = null;
+    private DatabaseAdapter adapter = null;
+    private EventBus eventBus = null;
 
-	public void onCreate() {
-		super.onCreate();
+    private static PANApp singleton = null;
 
-		PANApp.singleton = this;
+    public void onCreate() {
+        super.onCreate();
 
-		this.eventBus = EventBus.getDefault();
-		
-		this.adapter = new DatabaseAdapter(getApplicationContext());
-		
-		validateData();
-	}
+        PANApp.singleton = this;
 
-	@Background
-	private void validateData() {
-		adapter.validateDatabase();
-	}
+        this.eventBus = EventBus.getDefault();
 
-	@Override
-	public void onTerminate() {
-		super.onTerminate();
+        this.adapter = new DatabaseAdapter(getApplicationContext());
 
-		if (this.adapter != null) {
-			this.adapter.close();
-			this.adapter = null;
-		}
+        validateData();
+    }
 
-		singleton = null;
-	}
+    private void validateData() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.validateDatabase();
+            }
+        }).run();
+    }
 
-	public DatabaseAdapter getAdapter() {
-		return this.adapter;
-	}
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
 
-	public EventBus getEventBus() {
-		return eventBus;
-	}
+        if (this.adapter != null) {
+            this.adapter.close();
+            this.adapter = null;
+        }
 
-	public static PANApp getInstance() {
-		return singleton;
-	}
+        singleton = null;
+    }
+
+    public DatabaseAdapter getAdapter() {
+        return this.adapter;
+    }
+
+    public EventBus getEventBus() {
+        return eventBus;
+    }
+
+    public static PANApp getInstance() {
+        return singleton;
+    }
 }

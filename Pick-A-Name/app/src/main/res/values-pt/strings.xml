@@ -6,8 +6,9 @@
 Por favor seja paciente, isto acontece apenas da primeira vez que se abre a applicação"</string>
 
     <!-- LIST SCREEN -->
-    <string name="names_allowed_male">Homem</string>
-    <string name="names_allowed_female">Mulher</string>
+    <string name="names_search_hint">Pesquisa</string>
+    <string name="names_allowed_male">Masculino</string>
+    <string name="names_allowed_female">Feminino</string>
 
     <!-- DETAILS SCREEN -->
     <string name="names_details_name_label">Nome:</string>

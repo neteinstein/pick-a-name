@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent">
 
     <EditText
         android:id="@+id/names_filter"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:hint="@string/names_search_hint" />
 
     <ListView
         android:id="@+id/names_allowed_listview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_below="@id/names_filter"
-        android:background="#ffffffff"
-        android:cacheColorHint="#00000000"
+        android:background="#FF000000"
+        android:cacheColorHint="#00FF0000"
         android:choiceMode="singleChoice"
         android:dividerHeight="1.0dip"
         android:fastScrollEnabled="true" />
@@ -27,7 +28,7 @@
         android:clickable="true"
         android:gravity="center"
         android:orientation="vertical"
-        android:visibility="visible" >
+        android:visibility="visible">
 
         <ProgressBar
             style="@android:style/Widget.ProgressBar"

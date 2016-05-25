@@ -26,6 +26,5 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v4:19.1.0'
-    compile files('libs/androidannotations-3.0.1.jar')
     compile files('libs/eventbus-2.0.2.jar')
 }

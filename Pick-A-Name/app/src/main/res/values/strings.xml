@@ -6,6 +6,7 @@
 Please be pacient, this will happen only the first time you open the app."</string>
 
     <!-- LIST SCREEN -->
+    <string name="names_search_hint">Search</string>
     <string name="names_allowed_male">Male</string>
     <string name="names_allowed_female">Female</string>
     
