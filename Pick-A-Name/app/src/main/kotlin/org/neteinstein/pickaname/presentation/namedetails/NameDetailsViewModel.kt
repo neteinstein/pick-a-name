@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import org.neteinstein.pickaname.data.repository.NameRepository
 import org.neteinstein.pickaname.domain.model.Name
@@ -38,19 +37,18 @@ class NameDetailsViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
-            nameRepository.getNameByIdFlow(nameId)
-                .catch { exception ->
-                    _uiState.value = NameDetailsUiState.Error(
-                        exception.message ?: "Unknown error"
-                    )
+            try {
+                val name = nameRepository.getNameById(nameId)
+                _uiState.value = if (name != null) {
+                    NameDetailsUiState.Success(name)
+                } else {
+                    NameDetailsUiState.Error("Name not found")
                 }
-                .collect { name ->
-                    _uiState.value = if (name != null) {
-                        NameDetailsUiState.Success(name)
-                    } else {
-                        NameDetailsUiState.Error("Name not found")
-                    }
-                }
+            } catch (exception: Exception) {
+                _uiState.value = NameDetailsUiState.Error(
+                    exception.message ?: "Unknown error"
+                )
+            }
         }
     }
 }

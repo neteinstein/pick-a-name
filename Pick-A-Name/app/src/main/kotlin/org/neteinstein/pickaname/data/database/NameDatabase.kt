@@ -64,6 +64,9 @@ abstract class NameDatabase : RoomDatabase() {
          * Populate database from assets file
          */
         private suspend fun populateDatabase(nameDao: NameDao, context: Context) {
+            var successCount = 0
+            var failureCount = 0
+            
             try {
                 val inputStream = InputStreamReader(
                     context.assets.open("database.data"),
@@ -100,9 +103,15 @@ abstract class NameDatabase : RoomDatabase() {
                                                 notes = notes
                                             )
                                         )
-                                    } catch (e: Exception) {
-                                        // Skip malformed entries
+                                        successCount++
+                                    } catch (e: NumberFormatException) {
+                                        // Log parsing error but continue processing
+                                        android.util.Log.w("NameDatabase", "Failed to parse entry: ${e.message}")
+                                        failureCount++
                                     }
+                                } else {
+                                    android.util.Log.w("NameDatabase", "Invalid entry format: insufficient parts")
+                                    failureCount++
                                 }
                             }
                         }
@@ -113,8 +122,10 @@ abstract class NameDatabase : RoomDatabase() {
                 names.chunked(500).forEach { batch ->
                     nameDao.insertNames(batch)
                 }
+                
+                android.util.Log.i("NameDatabase", "Database populated: $successCount entries succeeded, $failureCount failed")
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("NameDatabase", "Error populating database", e)
             }
         }
         

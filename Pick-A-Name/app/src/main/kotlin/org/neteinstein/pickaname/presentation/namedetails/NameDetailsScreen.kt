@@ -7,9 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.neteinstein.pickaname.R
 import org.neteinstein.pickaname.domain.model.Name
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -23,12 +25,12 @@ fun NameDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Name Details") },
+                title = { Text(stringResource(R.string.name_details_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },

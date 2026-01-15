@@ -29,7 +29,7 @@ fun NameListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pick A Name") },
+                title = { Text(stringResource(R.string.name_list_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -49,8 +49,8 @@ fun NameListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Filter names...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                placeholder = { Text(stringResource(R.string.name_list_search_hint)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search)) },
                 singleLine = true
             )
             
@@ -71,7 +71,7 @@ fun NameListScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No names found",
+                            text = stringResource(R.string.name_list_empty),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center
                         )
@@ -98,7 +98,7 @@ fun NameListScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Error: ${state.message}",
+                            text = stringResource(R.string.name_list_error, state.message),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center
