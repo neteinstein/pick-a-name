@@ -111,6 +111,35 @@ distribution/
 
 Each file should contain release notes for that language (max 500 characters).
 
+## Store Listing Metadata
+
+The Play Console "Store listing" text fields (app name, short description, full description)
+are tracked as source-controlled text at `distribution/metadata/android/<locale>/` (the
+`fastlane supply` layout), so listing copy can be reviewed in PRs like any other content change:
+
+```
+distribution/
+  metadata/
+    android/
+      pt-PT/   # default/main listing language
+        title.txt
+        short_description.txt
+        full_description.txt
+      en-US/
+        title.txt
+        short_description.txt
+        full_description.txt
+```
+
+These files aren't uploaded automatically yet — the `upload-google-play` action wired up in
+`release.yml` only handles the release binary, `whatsNewDirectory`, and `mappingFile`, not the
+main store listing. Until that's automated (e.g. via `fastlane supply` or the
+`triple-t/gradle-play-publisher` plugin), copy these values into Play Console manually. See
+[`distribution/STORE_LISTING.md`](../distribution/STORE_LISTING.md) for the full checklist of
+every field Play Console requires to create the listing, including the graphics assets and
+Console-only settings (category, contact details, content rating, data safety) that can't live
+in this repo as plain text.
+
 ## Local Testing
 
 Test workflows locally using [act](https://github.com/nektos/act):

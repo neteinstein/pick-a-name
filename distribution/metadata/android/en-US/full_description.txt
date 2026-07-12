@@ -1,0 +1,23 @@
+Allowed Names in Portugal helps parents, parents-to-be, and the curious quickly look up — even offline — the official list of first names legally allowed for newborns in Portugal.
+
+The app automatically downloads the "Lista de Nomes Próprios" (List of Given Names) published by Portugal's Instituto dos Registos e do Notariado (IRN) — the official civil registry authority — and organizes it into an easy-to-browse list.
+
+KEY FEATURES
+• Complete list of officially approved first names
+• Instant search by name
+• Filter by gender (female/male) and by initial letter
+• Live result count as you filter
+• Works offline after the first sync
+• Configurable automatic refresh (weekly, monthly, quarterly, twice a year, or yearly)
+• Configurable data source in Settings
+• Available in Portuguese and English, following your device language
+
+PRIVACY-FIRST
+This app collects no personal data, has no user accounts, shows no ads, and includes no analytics or tracking libraries. The only internet connection is used to download the official names list. See our Privacy Policy for details.
+
+OPEN SOURCE
+Source code is publicly available on GitHub under the Apache 2.0 license:
+github.com/neteinstein/portuguese-allowed-names
+
+DISCLAIMER
+This is an unofficial, independent app with no affiliation to the IRN or the Government of Portugal. Data shown is based on the document published by the IRN and may not reflect very recent updates to the official list; always check the official IRN source for legal purposes.
