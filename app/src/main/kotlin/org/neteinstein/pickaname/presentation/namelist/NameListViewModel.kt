@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,13 +14,17 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import org.neteinstein.pickaname.domain.model.AutoRefreshResult
 import org.neteinstein.pickaname.domain.model.Gender
 import org.neteinstein.pickaname.domain.model.NameEntry
 import org.neteinstein.pickaname.domain.model.NameFilter
 import org.neteinstein.pickaname.domain.usecase.ObserveNameCountUseCase
 import org.neteinstein.pickaname.domain.usecase.ObserveNamesUseCase
+import org.neteinstein.pickaname.domain.usecase.RefreshNamesIfDueUseCase
 
 data class NameListUiState(
     val names: List<NameEntry> = emptyList(),
@@ -29,15 +34,25 @@ data class NameListUiState(
     val selectedInitial: Char? = null
 )
 
+/** One-off events the name list screen should react to, e.g. by showing a Snackbar. */
+sealed interface NameListEvent {
+    /** The periodic auto-refresh check ran and failed; the existing data is untouched. */
+    data object AutoRefreshFailed : NameListEvent
+}
+
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class NameListViewModel(
     private val observeNamesUseCase: ObserveNamesUseCase,
-    private val observeNameCountUseCase: ObserveNameCountUseCase
+    private val observeNameCountUseCase: ObserveNameCountUseCase,
+    private val refreshNamesIfDueUseCase: RefreshNamesIfDueUseCase
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
     private val gender = MutableStateFlow<Gender?>(null)
     private val initial = MutableStateFlow<Char?>(null)
+
+    private val _events = Channel<NameListEvent>(Channel.BUFFERED)
+    val events: Flow<NameListEvent> = _events.receiveAsFlow()
 
     /**
      * [query]'s very first value passes through immediately; only later edits are debounced.
@@ -73,6 +88,18 @@ class NameListViewModel(
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), NameListUiState())
+
+    init {
+        // Reaching this screen means the database is already populated (splash routes to sync
+        // otherwise), so this is the right place for the once-per-app-open periodic refresh
+        // check. A success silently refreshes the list below via the reactive Flow above; a
+        // failure only surfaces a transient message - existing data is never touched.
+        viewModelScope.launch {
+            if (refreshNamesIfDueUseCase() is AutoRefreshResult.Failed) {
+                _events.send(NameListEvent.AutoRefreshFailed)
+            }
+        }
+    }
 
     fun onQueryChange(newQuery: String) {
         query.value = newQuery

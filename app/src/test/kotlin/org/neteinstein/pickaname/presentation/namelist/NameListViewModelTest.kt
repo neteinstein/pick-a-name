@@ -2,6 +2,7 @@ package org.neteinstein.pickaname.presentation.namelist
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,11 +12,14 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.neteinstein.pickaname.domain.model.AutoRefreshResult
 import org.neteinstein.pickaname.domain.model.Gender
 import org.neteinstein.pickaname.domain.model.NameEntry
 import org.neteinstein.pickaname.domain.model.NameFilter
+import org.neteinstein.pickaname.domain.model.SyncFailureReason
 import org.neteinstein.pickaname.domain.usecase.ObserveNameCountUseCase
 import org.neteinstein.pickaname.domain.usecase.ObserveNamesUseCase
+import org.neteinstein.pickaname.domain.usecase.RefreshNamesIfDueUseCase
 import org.neteinstein.pickaname.util.MainDispatcherRule
 
 /**
@@ -42,6 +46,7 @@ class NameListViewModelTest {
 
     private val observeNamesUseCase: ObserveNamesUseCase = mockk()
     private val observeNameCountUseCase: ObserveNameCountUseCase = mockk()
+    private val refreshNamesIfDueUseCase: RefreshNamesIfDueUseCase = mockk()
 
     private fun createViewModel(): NameListViewModel {
         every { observeNamesUseCase(any()) } answers {
@@ -52,7 +57,8 @@ class NameListViewModelTest {
             val filter = firstArg<NameFilter>()
             flowOf(allNames.count { matches(it, filter) })
         }
-        return NameListViewModel(observeNamesUseCase, observeNameCountUseCase)
+        coEvery { refreshNamesIfDueUseCase() } returns AutoRefreshResult.NotDue
+        return NameListViewModel(observeNamesUseCase, observeNameCountUseCase, refreshNamesIfDueUseCase)
     }
 
     @Test
@@ -172,6 +178,50 @@ class NameListViewModelTest {
             val state = awaitItem()
             assertThat(state.query).isEqualTo("ali")
             assertThat(state.names).containsExactly(alice)
+        }
+    }
+
+    @Test
+    fun `does not emit an event when no auto-refresh is due`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.events.test {
+            runCurrent()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `does not emit an event when the auto-refresh succeeds`() = runTest(mainDispatcherRule.dispatcher) {
+        every { observeNamesUseCase(any()) } answers {
+            flowOf(allNames.filter { matches(it, firstArg()) })
+        }
+        every { observeNameCountUseCase(any()) } answers {
+            flowOf(allNames.count { matches(it, firstArg()) })
+        }
+        coEvery { refreshNamesIfDueUseCase() } returns AutoRefreshResult.Refreshed(namesLoaded = 5)
+        val viewModel = NameListViewModel(observeNamesUseCase, observeNameCountUseCase, refreshNamesIfDueUseCase)
+
+        viewModel.events.test {
+            runCurrent()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `emits AutoRefreshFailed when the periodic check fails`() = runTest(mainDispatcherRule.dispatcher) {
+        every { observeNamesUseCase(any()) } answers {
+            flowOf(allNames.filter { matches(it, firstArg()) })
+        }
+        every { observeNameCountUseCase(any()) } answers {
+            flowOf(allNames.count { matches(it, firstArg()) })
+        }
+        coEvery { refreshNamesIfDueUseCase() } returns AutoRefreshResult.Failed(SyncFailureReason.NETWORK)
+        val viewModel = NameListViewModel(observeNamesUseCase, observeNameCountUseCase, refreshNamesIfDueUseCase)
+
+        viewModel.events.test {
+            runCurrent()
+            assertThat(awaitItem()).isEqualTo(NameListEvent.AutoRefreshFailed)
         }
     }
 }
