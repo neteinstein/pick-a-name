@@ -13,8 +13,12 @@ android {
         applicationId = "org.neteinstein.pickaname"
         minSdk = 23
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0"
+        // CI (see .github/workflows/release.yml) passes the real value via
+        // -PversionCode=<GitHub Actions run number>, so every released build gets a
+        // versionCode that's always higher than the last - required for Android to treat it
+        // as an upgrade. Local/dev builds that don't pass that property fall back to 1.
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

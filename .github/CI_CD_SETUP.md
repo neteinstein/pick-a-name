@@ -136,13 +136,21 @@ The build.gradle.kts should define version:
 ```kotlin
 android {
     defaultConfig {
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = "2.1.0"
     }
 }
 ```
 
-Version is automatically extracted and used for release tagging.
+`versionName` is a plain literal bumped by hand for each release. `versionCode` is read from a
+`-PversionCode=<n>` Gradle property so it can always be an ever-increasing integer; `release.yml`
+passes `-PversionCode=${{ github.run_number }}` when building the release APK/AAB, so every
+release build gets a unique, monotonically increasing code tied to its CI run. Local/dev builds
+that don't pass the property fall back to `1`.
+
+`VERSION_NAME` is extracted from `build.gradle.kts` and used for release tagging; `VERSION_CODE`
+is taken directly from `github.run_number` (the same value passed to Gradle) rather than parsed
+from the file, since it's no longer a literal there.
 
 `app/build.gradle.kts` also declares an empty `signingConfigs.release` and only attaches it to
 the `release` build type when the `android.injected.signing.store.file` Gradle property is
