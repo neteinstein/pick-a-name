@@ -22,8 +22,21 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Intentionally left blank: values are supplied at build time via
+            // -Pandroid.injected.signing.* Gradle properties (see
+            // .github/workflows/release.yml), so no keystore secrets ever need to be
+            // committed. Local/dev builds that don't pass those properties fall back to
+            // an unsigned release build (see the `hasProperty` check below).
+        }
+    }
+
     buildTypes {
         release {
+            if (project.hasProperty("android.injected.signing.store.file")) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

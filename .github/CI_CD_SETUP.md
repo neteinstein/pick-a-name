@@ -22,19 +22,28 @@ All jobs must pass before a PR can be merged.
 
 ### 2. Release (`release.yml`)
 
-Runs on every push to `main` or `master` branch:
+Runs when a pull request targeting `main` or `master` is **merged** (`pull_request` with
+`types: [closed]`, gated by `github.event.pull_request.merged == true`). Closing a PR without
+merging does not trigger a release, and neither does a direct push that bypasses PR review:
 
-- **Test**: Runs lint and unit tests on release variant
-- **Build Release**: Creates signed APK and AAB bundles
+- **Test**: Runs lint and unit tests on release variant, against the actual merge commit
+- **Build Release**: Creates a signed APK and AAB bundle. The signing secrets below are
+  **required** — the job fails fast with a clear error if `KEYSTORE_BASE64` is missing, rather
+  than silently producing an unsigned build
+- **Verify APK signature**: Runs `apksigner verify` on the built APK so the workflow log always
+  shows proof the artifact was actually signed (and with which certificate)
 - **Generate Release Notes**: Automatically generates release notes from commits
-- **Create Release**: Creates a GitHub release with version tag
-- **Upload to Play Store**: Deploys to Google Play Store (when configured)
+- **Create Release**: Creates a GitHub release (via `gh release create`) with the version tag,
+  attaching both the signed APK and AAB
+- **Upload to Play Store**: currently **disabled** (`if: false` on the step) until Play Store
+  publishing is ready. Remove the `if: false` line to re-enable it.
 
 ## Required Secrets
 
-To enable signing and Play Store deployment, add the following secrets in GitHub:
+To enable signing (required for every release) and, later, Play Store deployment, add the
+following secrets in GitHub:
 
-### Signing Secrets
+### Signing Secrets (required)
 
 1. **KEYSTORE_BASE64**: Base64-encoded release keystore file
    ```bash
@@ -47,7 +56,10 @@ To enable signing and Play Store deployment, add the following secrets in GitHub
 
 4. **KEY_PASSWORD**: Password for the signing key
 
-### Play Store Secrets
+Without these four secrets, the `build-release` job fails intentionally at the "Decode
+Keystore" step instead of publishing an unsigned release.
+
+### Play Store Secrets (not currently used — upload step is disabled)
 
 5. **PLAY_STORE_JSON_KEY**: Service account JSON key for Play Store API
    - Create a service account in Google Play Console
@@ -57,10 +69,12 @@ To enable signing and Play Store deployment, add the following secrets in GitHub
 
 ## Branch Protection Rules
 
-To enforce quality gates, configure the following branch protection rules for `main`:
+To enforce quality gates, configure the following branch protection rules for the default
+branch (currently `master` in this repo; the workflows also match `main` in case it's renamed
+later):
 
 1. Go to Repository Settings → Branches → Add Rule
-2. Branch name pattern: `main`
+2. Branch name pattern: `master` (or `main`)
 3. Enable:
    - ✅ Require a pull request before merging
    - ✅ Require approvals: 1
@@ -108,8 +122,11 @@ brew install act
 # Run PR checks (matrix job - runs both the lint and unit-tests legs)
 act pull_request -j checks
 
-# Run release workflow
-act push -j build-release
+# Run the release workflow. It triggers on a merged pull_request, so act needs an event
+# payload with `pull_request.merged: true` (a plain `act pull_request` payload defaults to
+# merged: false and the job will be skipped by design):
+echo '{"pull_request": {"merged": true, "number": 1, "merge_commit_sha": "HEAD", "base": {"ref": "master"}}}' > /tmp/pr-merged-event.json
+act pull_request -j build-release -e /tmp/pr-merged-event.json
 ```
 
 ## Gradle Configuration
@@ -126,3 +143,9 @@ android {
 ```
 
 Version is automatically extracted and used for release tagging.
+
+`app/build.gradle.kts` also declares an empty `signingConfigs.release` and only attaches it to
+the `release` build type when the `android.injected.signing.store.file` Gradle property is
+present (`release.yml` passes it, along with the store/key password and key alias, on the
+command line). This keeps local `./gradlew assembleRelease` runs working unsigned for
+day-to-day development while guaranteeing CI produces a properly signed artifact.
