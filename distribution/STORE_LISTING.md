@@ -5,8 +5,8 @@ Reference for every field Google Play Console asks for when creating the store l
 Portuguese (Portugal) — `pt-PT`**, with English (`en-US`) as a secondary translation, matching
 the app's own supported locales (`values/` and `values-pt/`).
 
-Text fields are checked into this repo (see below); graphics and Console-only settings are not
-representable as repo files and are called out explicitly as outstanding manual steps.
+Text fields and graphics are both checked into this repo (see below); only Console-only settings
+are not representable as repo files and are called out explicitly as manual steps.
 
 ## 1. Create app
 
@@ -29,21 +29,33 @@ trailing newline and are within Play Console's limits.
 Copy each file's contents verbatim into the matching Play Console field for that language (or
 wire up `fastlane supply` / `triple-t/gradle-play-publisher` to publish them directly).
 
-## 3. Main store listing — graphics (⚠️ not included — needs design/device work)
+## 3. Main store listing — graphics (✅ in this repo)
 
-Not producible as source text; each needs an actual export/screenshot pass:
+Source of truth: `distribution/metadata/android/<locale>/images/`, following the same
+[fastlane `supply`](https://docs.fastlane.tools/actions/supply/#images-and-screenshots) layout as
+the text metadata, so the whole `distribution/metadata/android/` tree can be published as-is by
+`fastlane supply` or `triple-t/gradle-play-publisher`.
 
-- **App icon** — 512×512, 32-bit PNG, no alpha. The in-app adaptive icon
-  (`app/src/main/res/drawable/ic_launcher_{background,foreground,monochrome}.xml`) only has
-  raster exports up to 192×192 (`mipmap-xxxhdpi`); generate a fresh 512×512 export from the
-  vector layers (Android Studio → Image Asset Studio, or an SVG/vector export tool).
-- **Feature graphic** — 1024×500, JPG or 24-bit PNG. No source asset exists yet; needs original
-  design.
-- **Phone screenshots** — at least 2 (up to 8), JPEG or 24-bit PNG, no alpha, each dimension
-  between 320–3840px, max aspect ratio 2:1. Capture from a running device/emulator (splash,
-  name list with filters open, settings).
-- **Tablet / Chromebook / Wear / TV screenshots, promo video** — optional; skip unless
-  targeting those form factors.
+| Field | Spec | Path |
+|---|---|---|
+| App icon | 512×512, 32-bit PNG, alpha | `images/icon.png` (same file in both locale folders — it has no text) |
+| Feature graphic | 1024×500, 24-bit PNG, no alpha | `images/featureGraphic.png` (localized — contains the app name) |
+| Phone screenshots | 1080×1920, 24-bit PNG, no alpha | `images/phoneScreenshots/1_splash.png` … `4_settings.png` |
+| 7" tablet screenshots | 1200×1920, 24-bit PNG, no alpha | `images/sevenInchScreenshots/1_splash.png` … `4_settings.png` |
+| 10" tablet screenshots | 1600×2560, 24-bit PNG, no alpha | `images/tenInchScreenshots/1_splash.png` … `4_settings.png` |
+
+Each device bucket has the same 4 screenshots: splash, name list (unfiltered), name list
+(filtered by gender + initial, to show the filtering feature), and settings. All dimensions and
+alpha channels were verified programmatically against the current Play Console asset spec.
+
+**Provenance note:** no Android emulator/device was available to capture these, so instead of
+being live screen captures, they were generated pixel-accurately from the app's actual source of
+truth — the exact theme colors (`presentation/theme/Color.kt`), launcher icon vector geometry
+(`res/drawable/ic_launcher_{background,foreground}.xml`), and screen layouts/copy
+(`NameListScreen.kt`, `SettingsScreen.kt`, `SplashScreen.kt`, `strings.xml`). They are faithful
+recreations of the real UI, not mockups with invented colors or fabricated layouts — but if you'd
+prefer genuine device captures before publishing, that's a reasonable follow-up (e.g. via
+`fastlane screengrab` or manual capture) and these files can simply be overwritten in place.
 
 ## 4. Store settings (Console-only — recommended values)
 

@@ -113,9 +113,10 @@ Each file should contain release notes for that language (max 500 characters).
 
 ## Store Listing Metadata
 
-The Play Console "Store listing" text fields (app name, short description, full description)
-are tracked as source-controlled text at `distribution/metadata/android/<locale>/` (the
-`fastlane supply` layout), so listing copy can be reviewed in PRs like any other content change:
+The Play Console "Store listing" fields — text (app name, short description, full description)
+and graphics (icon, feature graphic, phone/tablet screenshots) — are tracked as source-controlled
+files at `distribution/metadata/android/<locale>/` (the `fastlane supply` layout), so listing
+content can be reviewed in PRs like any other change:
 
 ```
 distribution/
@@ -125,10 +126,17 @@ distribution/
         title.txt
         short_description.txt
         full_description.txt
+        images/
+          icon.png
+          featureGraphic.png
+          phoneScreenshots/
+          sevenInchScreenshots/
+          tenInchScreenshots/
       en-US/
         title.txt
         short_description.txt
         full_description.txt
+        images/            # same layout as pt-PT
 ```
 
 These files aren't uploaded automatically yet — the `upload-google-play` action wired up in
@@ -136,9 +144,9 @@ These files aren't uploaded automatically yet — the `upload-google-play` actio
 main store listing. Until that's automated (e.g. via `fastlane supply` or the
 `triple-t/gradle-play-publisher` plugin), copy these values into Play Console manually. See
 [`distribution/STORE_LISTING.md`](../distribution/STORE_LISTING.md) for the full checklist of
-every field Play Console requires to create the listing, including the graphics assets and
-Console-only settings (category, contact details, content rating, data safety) that can't live
-in this repo as plain text.
+every field Play Console requires to create the listing, including the Console-only settings
+(category, contact details, content rating, data safety) that can't live in this repo as plain
+text or files.
 
 ## Local Testing
 
