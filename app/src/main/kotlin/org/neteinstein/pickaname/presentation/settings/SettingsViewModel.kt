@@ -1,0 +1,71 @@
+package org.neteinstein.pickaname.presentation.settings
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.neteinstein.pickaname.domain.model.NamesSourceDefaults
+import org.neteinstein.pickaname.domain.usecase.GetSourceUrlUseCase
+import org.neteinstein.pickaname.domain.usecase.ResetSourceUrlUseCase
+import org.neteinstein.pickaname.domain.usecase.UpdateSourceUrlUseCase
+
+data class SettingsUiState(
+    val sourceUrl: String = "",
+    val urlError: Boolean = false
+)
+
+/** One-off events the Settings screen should react to (e.g. by navigating to the sync screen). */
+sealed interface SettingsEvent {
+    data object SourceUpdated : SettingsEvent
+}
+
+class SettingsViewModel(
+    private val getSourceUrlUseCase: GetSourceUrlUseCase,
+    private val updateSourceUrlUseCase: UpdateSourceUrlUseCase,
+    private val resetSourceUrlUseCase: ResetSourceUrlUseCase
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
+    val events: Flow<SettingsEvent> = _events.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            _uiState.update { it.copy(sourceUrl = getSourceUrlUseCase()) }
+        }
+    }
+
+    fun onUrlChange(newUrl: String) {
+        _uiState.update { it.copy(sourceUrl = newUrl, urlError = false) }
+    }
+
+    fun onSave() {
+        viewModelScope.launch {
+            val result = updateSourceUrlUseCase(_uiState.value.sourceUrl)
+            if (result.isSuccess) {
+                _uiState.update { it.copy(urlError = false) }
+                _events.send(SettingsEvent.SourceUpdated)
+            } else {
+                _uiState.update { it.copy(urlError = true) }
+            }
+        }
+    }
+
+    fun onReset() {
+        viewModelScope.launch {
+            resetSourceUrlUseCase()
+            _uiState.update {
+                it.copy(sourceUrl = NamesSourceDefaults.DEFAULT_SOURCE_URL, urlError = false)
+            }
+            _events.send(SettingsEvent.SourceUpdated)
+        }
+    }
+}

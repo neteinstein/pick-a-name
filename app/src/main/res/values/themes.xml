@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.PickAName" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose owns all real theming (see presentation/theme). This just prevents a mismatched
+         window background flash before the first Compose frame is drawn. -->
+    <style name="Theme.PickAName" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFF7F9FC</item>
+        <item name="android:statusBarColor">#FF00599D</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 </resources>
+

@@ -75,7 +75,12 @@ jobs:
   
   instrumented-tests:
     name: Instrumented Tests
-    runs-on: macos-latest
+    # ubuntu-latest (with KVM) rather than macos-latest: GitHub's macOS runners are now
+    # Apple Silicon (ARM64) and cannot boot the x86_64 emulator image, which fails every run
+    # with "device not found". Linux hardware-accelerated emulators are also the officially
+    # recommended, faster, cheaper option — see
+    # https://github.com/ReactiveCircus/android-emulator-runner#running-hardware-accelerated-emulators-on-linux-runners
+    runs-on: ubuntu-latest
     needs: lint
     
     steps:
@@ -91,6 +96,12 @@ jobs:
           
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
         
       - name: Run Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2

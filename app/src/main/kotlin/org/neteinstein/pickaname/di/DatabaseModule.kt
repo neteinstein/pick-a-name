@@ -1,48 +1,20 @@
 package org.neteinstein.pickaname.di
 
-import android.content.Context
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import org.neteinstein.pickaname.data.database.NameDao
-import org.neteinstein.pickaname.data.database.NameDatabase
-import javax.inject.Qualifier
-import javax.inject.Singleton
+import androidx.room.Room
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
+import org.neteinstein.pickaname.data.local.database.AppDatabase
 
 /**
- * Hilt module for providing database-related dependencies
+ * Room database + DAO providers.
  */
-@Module
-@InstallIn(SingletonComponent::class)
-object DatabaseModule {
-    
-    @Qualifier
-    @Retention(AnnotationRetention.BINARY)
-    annotation class ApplicationScope
-    
-    @Provides
-    @Singleton
-    @ApplicationScope
-    fun provideApplicationScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob())
+val databaseModule = module {
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        ).build()
     }
-    
-    @Provides
-    @Singleton
-    fun provideDatabase(
-        @ApplicationContext context: Context,
-        @ApplicationScope scope: CoroutineScope
-    ): NameDatabase {
-        return NameDatabase.getDatabase(context, scope)
-    }
-    
-    @Provides
-    @Singleton
-    fun provideNameDao(database: NameDatabase): NameDao {
-        return database.nameDao()
-    }
+    single { get<AppDatabase>().nameDao() }
 }

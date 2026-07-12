@@ -1,19 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Identidade da aplicação (também usado como título no ecrã inicial) -->
+    <string name="app_name">Nomes Permitidos em Portugal</string>
+    <string name="splash_tagline">Lista oficial de nomes próprios portugueses legalmente permitidos</string>
 
-    <string name="app_name">Escolhe um nome</string>
-    <string name="names_allowed_loading">"A arrancar a base de dados...
-Por favor seja paciente, isto acontece apenas da primeira vez que se abre a applicação"</string>
+    <!-- Ecrã de sincronização / carregamento -->
+    <string name="sync_loading_title">A carregar os nomes…</string>
+    <string name="sync_loading_message">Estamos a descarregar e preparar a lista oficial de nomes portugueses. Isto demora apenas um momento.</string>
+    <string name="sync_error_title">Ocorreu um problema</string>
+    <string name="sync_error_network">Não foi possível contactar a fonte de nomes. Verifique a sua ligação à Internet e tente novamente.</string>
+    <string name="sync_error_invalid_source">A fonte configurada não parece ser uma lista de nomes válida.</string>
+    <string name="sync_error_no_names_found">Não foram encontrados nomes na fonte configurada.</string>
+    <string name="sync_error_unknown">Ocorreu um erro inesperado.</string>
+    <string name="sync_retry">Tentar novamente</string>
+    <string name="sync_edit_source">Editar fonte</string>
 
-    <!-- LIST SCREEN -->
-    <string name="names_search_hint">Pesquisa</string>
-    <string name="names_allowed_male">Masculino</string>
-    <string name="names_allowed_female">Feminino</string>
+    <!-- Ecrã de lista de nomes -->
+    <string name="name_list_search_hint">Pesquisar nomes</string>
+    <string name="filter_section_gender">Género</string>
+    <string name="filter_section_initial">Inicial</string>
+    <string name="filter_gender_all">Todos</string>
+    <string name="filter_initial_all">Todas</string>
+    <string name="gender_female">Feminino</string>
+    <string name="gender_male">Masculino</string>
+    <string name="name_list_empty_state">Nenhum nome corresponde aos filtros selecionados.</string>
+    <string name="cd_settings_icon">Definições</string>
 
-    <!-- DETAILS SCREEN -->
-    <string name="names_details_name_label">Nome:</string>
-    <string name="names_details_gender_label">Género Permitido:</string>
-    <string name="names_details_gender_default">Ambos</string>
-    <string name="names_details_notes_label">Notas:</string>
+    <!-- Ecrã de definições -->
+    <string name="settings_title">Definições</string>
+    <string name="settings_language_section">Idioma</string>
+    <string name="settings_language_description">A aplicação Nomes Permitidos em Portugal segue o idioma do dispositivo. Toque abaixo para o alterar nas definições do Android.</string>
+    <string name="settings_language_button">Alterar idioma da aplicação</string>
+    <string name="settings_source_section">Fonte dos nomes</string>
+    <string name="settings_source_description">URL do documento PDF com a lista de nomes próprios portugueses oficialmente aprovados.</string>
+    <string name="settings_source_url_label">URL da fonte</string>
+    <string name="settings_source_url_error">Introduza um URL http(s) válido</string>
+    <string name="settings_save">Guardar e recarregar</string>
+    <string name="settings_reset">Repor predefinição</string>
+
+    <!-- Comum -->
+    <string name="cd_back">Voltar</string>
+
+    <!-- Plurais -->
+    <plurals name="name_count">
+        <item quantity="one">%d nome</item>
+        <item quantity="many">%d nomes</item>
+        <item quantity="other">%d nomes</item>
+    </plurals>
 
 </resources>

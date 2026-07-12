@@ -4,133 +4,174 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.neteinstein.pickaname.data.repository.NameRepository
-import org.neteinstein.pickaname.domain.model.Name
+import org.neteinstein.pickaname.domain.model.Gender
+import org.neteinstein.pickaname.domain.model.NameEntry
+import org.neteinstein.pickaname.domain.model.NameFilter
+import org.neteinstein.pickaname.domain.usecase.ObserveNameCountUseCase
+import org.neteinstein.pickaname.domain.usecase.ObserveNamesUseCase
+import org.neteinstein.pickaname.util.MainDispatcherRule
 
+/**
+ * [NameListViewModel.uiState] is backed by `stateIn(..., NameListUiState())`, so the very first
+ * item any collector sees is always that static initial value - before the real (mocked) data
+ * has had a chance to flow through `combine`/`flatMapLatest`. Every test below accounts for that
+ * by awaiting it explicitly, then calling `runCurrent()` to let the real pipeline compute its
+ * first genuine result, before asserting on anything.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NameListViewModelTest {
-    
-    private val testDispatcher = StandardTestDispatcher()
-    private lateinit var repository: NameRepository
-    private lateinit var viewModel: NameListViewModel
-    
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-        repository = mockk()
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val alice = NameEntry(1, "Alice", Gender.FEMALE)
+    private val bob = NameEntry(2, "Bob", Gender.MALE)
+    private val allNames = listOf(alice, bob)
+
+    private fun matches(entry: NameEntry, filter: NameFilter): Boolean =
+        (filter.gender == null || entry.gender == filter.gender) &&
+            (filter.initial == null || entry.name.first().uppercaseChar() == filter.initial) &&
+            (filter.query.isBlank() || entry.name.contains(filter.query, ignoreCase = true))
+
+    private val observeNamesUseCase: ObserveNamesUseCase = mockk()
+    private val observeNameCountUseCase: ObserveNameCountUseCase = mockk()
+
+    private fun createViewModel(): NameListViewModel {
+        every { observeNamesUseCase(any()) } answers {
+            val filter = firstArg<NameFilter>()
+            flowOf(allNames.filter { matches(it, filter) })
+        }
+        every { observeNameCountUseCase(any()) } answers {
+            val filter = firstArg<NameFilter>()
+            flowOf(allNames.count { matches(it, filter) })
+        }
+        return NameListViewModel(observeNamesUseCase, observeNameCountUseCase)
     }
-    
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-    
+
     @Test
-    fun `initial state is Loading`() = runTest {
-        // Given
-        every { repository.getAllowedNames() } returns flowOf(emptyList())
-        
-        // When
-        viewModel = NameListViewModel(repository)
-        
-        // Then - initial state before flow collection
-        val initialState = viewModel.uiState.value
-        assertThat(initialState).isInstanceOf(NameListUiState.Loading::class.java)
-    }
-    
-    @Test
-    fun `shows Empty state when no names`() = runTest {
-        // Given
-        every { repository.getAllowedNames() } returns flowOf(emptyList())
-        
-        // When
-        viewModel = NameListViewModel(repository)
-        testDispatcher.scheduler.advanceUntilIdle()
-        
-        // Then
+    fun `initial state exposes the unfiltered list and total count`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
         viewModel.uiState.test {
+            awaitItem() // stateIn's static default, emitted before the pipeline has run at all
+            runCurrent()
+
             val state = awaitItem()
-            assertThat(state).isInstanceOf(NameListUiState.Empty::class.java)
+            assertThat(state.names).containsExactly(alice, bob)
+            assertThat(state.count).isEqualTo(2)
+            assertThat(state.selectedGender).isNull()
+            assertThat(state.selectedInitial).isNull()
         }
     }
-    
+
     @Test
-    fun `shows Success state with names`() = runTest {
-        // Given
-        val names = listOf(
-            Name(1, "João", Name.Gender.MALE, ""),
-            Name(2, "Maria", Name.Gender.FEMALE, "")
-        )
-        every { repository.getAllowedNames() } returns flowOf(names)
-        
-        // When
-        viewModel = NameListViewModel(repository)
-        testDispatcher.scheduler.advanceUntilIdle()
-        
-        // Then
+    fun `selecting a gender filters immediately without waiting for debounce`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
         viewModel.uiState.test {
+            awaitItem() // static default
+            runCurrent()
+            awaitItem() // real unfiltered first result
+
+            viewModel.onGenderSelected(Gender.MALE)
+            runCurrent()
+
             val state = awaitItem()
-            assertThat(state).isInstanceOf(NameListUiState.Success::class.java)
-            val successState = state as NameListUiState.Success
-            assertThat(successState.names).hasSize(2)
+            assertThat(state.names).containsExactly(bob)
+            assertThat(state.count).isEqualTo(1)
+            assertThat(state.selectedGender).isEqualTo(Gender.MALE)
         }
     }
-    
+
     @Test
-    fun `filters names based on search query`() = runTest {
-        // Given
-        val allNames = listOf(
-            Name(1, "João", Name.Gender.MALE, ""),
-            Name(2, "Maria", Name.Gender.FEMALE, ""),
-            Name(3, "José", Name.Gender.MALE, "")
-        )
-        every { repository.getAllowedNames() } returns flowOf(allNames)
-        
-        // When
-        viewModel = NameListViewModel(repository)
-        testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.onSearchQueryChanged("Jo")
-        testDispatcher.scheduler.advanceUntilIdle()
-        
-        // Then
+    fun `selecting an initial letter filters immediately`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
         viewModel.uiState.test {
+            awaitItem() // static default
+            runCurrent()
+            awaitItem() // real unfiltered first result
+
+            viewModel.onInitialSelected('B')
+            runCurrent()
+
             val state = awaitItem()
-            assertThat(state).isInstanceOf(NameListUiState.Success::class.java)
-            val successState = state as NameListUiState.Success
-            assertThat(successState.names).hasSize(2) // João and José
+            assertThat(state.names).containsExactly(bob)
+            assertThat(state.selectedInitial).isEqualTo('B')
         }
     }
-    
+
     @Test
-    fun `search query is case insensitive`() = runTest {
-        // Given
-        val names = listOf(
-            Name(1, "João", Name.Gender.MALE, "")
-        )
-        every { repository.getAllowedNames() } returns flowOf(names)
-        
-        // When
-        viewModel = NameListViewModel(repository)
-        testDispatcher.scheduler.advanceUntilIdle()
-        viewModel.onSearchQueryChanged("joão")
-        testDispatcher.scheduler.advanceUntilIdle()
-        
-        // Then
+    fun `a gender selection made before the first result arrives still applies immediately`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
         viewModel.uiState.test {
+            awaitItem() // static default
+
+            // Selecting a filter before the pipeline has produced its first real value at all
+            // (e.g. a very fast tap right as the screen opens) must not be lost, delayed, or
+            // preceded by a transient unfiltered result.
+            viewModel.onGenderSelected(Gender.MALE)
+            runCurrent()
+
             val state = awaitItem()
-            assertThat(state).isInstanceOf(NameListUiState.Success::class.java)
-            val successState = state as NameListUiState.Success
-            assertThat(successState.names).hasSize(1)
+            assertThat(state.names).containsExactly(bob)
+            assertThat(state.selectedGender).isEqualTo(Gender.MALE)
+        }
+    }
+
+    @Test
+    fun `typing a query does not update state until the debounce window passes`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // static default
+            runCurrent()
+            awaitItem() // real unfiltered first result
+
+            viewModel.onQueryChange("bob")
+            runCurrent()
+            expectNoEvents()
+
+            advanceTimeBy(300)
+            runCurrent()
+
+            val state = awaitItem()
+            assertThat(state.names).containsExactly(bob)
+            assertThat(state.query).isEqualTo("bob")
+        }
+    }
+
+    @Test
+    fun `rapid query changes only emit once the debounce settles on the latest value`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.uiState.test {
+            awaitItem() // static default
+            runCurrent()
+            awaitItem() // real unfiltered first result
+
+            viewModel.onQueryChange("a")
+            advanceTimeBy(100)
+            viewModel.onQueryChange("al")
+            advanceTimeBy(100)
+            viewModel.onQueryChange("ali")
+            runCurrent()
+            expectNoEvents()
+
+            advanceTimeBy(300)
+            runCurrent()
+
+            val state = awaitItem()
+            assertThat(state.query).isEqualTo("ali")
+            assertThat(state.names).containsExactly(alice)
         }
     }
 }
