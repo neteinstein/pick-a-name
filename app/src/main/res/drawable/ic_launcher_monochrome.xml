@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Monochrome layer for Android 13+ themed icons. The system applies a single tint color
+  wherever this is opaque, so the actual fill color below is irrelevant. Deliberately
+  simplified vs. the full-color foreground (no list-line detail) per Material guidance that
+  monochrome silhouettes should be bolder/simpler, not a literal recolor. The checkmark is
+  punched out as a true hole (fillType="evenOdd", second subpath) rather than drawn on top, so
+  it still reads once the system re-tints everything to one flat color.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillType="evenOdd"
+        android:fillColor="#FF000000"
+        android:pathData="
+            M37,24 H71 A10,10 0 0 1 81,34 V74 A10,10 0 0 1 71,84 H37 A10,10 0 0 1 27,74 V34 A10,10 0 0 1 37,24 Z
+            M56.5,71 A14.5,14.5 0 1 0 85.5,71 A14.5,14.5 0 1 0 56.5,71 Z
+            M63.88,72.88 L68.68,77.08 L71.13,76.86 L78.33,67.86 L75.67,65.74 L68.47,74.74 L70.92,74.52 L66.12,70.32 Z" />
+</vector>

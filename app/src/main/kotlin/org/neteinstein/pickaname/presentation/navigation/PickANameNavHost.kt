@@ -20,8 +20,18 @@ import org.neteinstein.pickaname.presentation.sync.SyncScreen
  */
 @Composable
 fun PickANameNavHost(navController: NavHostController = rememberNavController()) {
-    NavHost(navController = navController, startDestination = Routes.SPLASH) {
-        composable(Routes.SPLASH) {
+    NavHost(
+        navController = navController,
+        startDestination = Routes.SPLASH,
+        enterTransition = pushEnter,
+        exitTransition = pushExit,
+        popEnterTransition = popEnter,
+        popExitTransition = popExit
+    ) {
+        composable(
+            route = Routes.SPLASH,
+            exitTransition = crossfadeExit
+        ) {
             SplashScreen(
                 onNavigateToSync = {
                     navController.navigate(Routes.sync(SyncOrigin.ONBOARDING)) {
@@ -37,7 +47,13 @@ fun PickANameNavHost(navController: NavHostController = rememberNavController())
         }
         composable(
             route = Routes.SYNC_PATTERN,
-            arguments = listOf(navArgument("origin") { type = NavType.StringType })
+            arguments = listOf(navArgument("origin") { type = NavType.StringType }),
+            enterTransition = {
+                // Coming from Splash is a stack replace (crossfade); coming from Settings is a
+                // real forward push (slide), since Settings remains underneath on the back stack.
+                if (initialState.destination.route == Routes.SPLASH) crossfadeEnter() else pushEnter()
+            },
+            exitTransition = crossfadeExit
         ) {
             SyncScreen(
                 onSyncSuccess = {
@@ -50,7 +66,10 @@ fun PickANameNavHost(navController: NavHostController = rememberNavController())
                 }
             )
         }
-        composable(Routes.NAME_LIST) {
+        composable(
+            route = Routes.NAME_LIST,
+            enterTransition = crossfadeEnter
+        ) {
             NameListScreen(
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) }
             )
