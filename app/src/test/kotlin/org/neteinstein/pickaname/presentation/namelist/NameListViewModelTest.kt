@@ -134,7 +134,7 @@ class NameListViewModelTest {
     }
 
     @Test
-    fun `typing a query does not update state until the debounce window passes`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `typing a query echoes immediately but results wait for the debounce window`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = createViewModel()
 
         viewModel.uiState.test {
@@ -144,7 +144,12 @@ class NameListViewModelTest {
 
             viewModel.onQueryChange("bob")
             runCurrent()
-            expectNoEvents()
+
+            // The search field must reflect the keystroke right away, even though the list
+            // hasn't been refiltered yet - otherwise typing looks like it does nothing.
+            val echoed = awaitItem()
+            assertThat(echoed.query).isEqualTo("bob")
+            assertThat(echoed.names).containsExactly(alice, bob)
 
             advanceTimeBy(300)
             runCurrent()
@@ -156,7 +161,7 @@ class NameListViewModelTest {
     }
 
     @Test
-    fun `rapid query changes only emit once the debounce settles on the latest value`() = runTest(mainDispatcherRule.dispatcher) {
+    fun `rapid query changes echo every keystroke but only refilter once the debounce settles`() = runTest(mainDispatcherRule.dispatcher) {
         val viewModel = createViewModel()
 
         viewModel.uiState.test {
@@ -165,12 +170,20 @@ class NameListViewModelTest {
             awaitItem() // real unfiltered first result
 
             viewModel.onQueryChange("a")
+            runCurrent()
+            assertThat(awaitItem().query).isEqualTo("a")
+
             advanceTimeBy(100)
             viewModel.onQueryChange("al")
+            runCurrent()
+            assertThat(awaitItem().query).isEqualTo("al")
+
             advanceTimeBy(100)
             viewModel.onQueryChange("ali")
             runCurrent()
-            expectNoEvents()
+            val lastEcho = awaitItem()
+            assertThat(lastEcho.query).isEqualTo("ali")
+            assertThat(lastEcho.names).containsExactly(alice, bob) // not refiltered yet
 
             advanceTimeBy(300)
             runCurrent()

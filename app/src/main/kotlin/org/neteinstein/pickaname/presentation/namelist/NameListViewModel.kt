@@ -77,12 +77,17 @@ class NameListViewModel(
     val uiState: StateFlow<NameListUiState> = filter.flatMapLatest { currentFilter ->
         combine(
             observeNamesUseCase(currentFilter),
-            observeNameCountUseCase(currentFilter)
-        ) { names, count ->
+            observeNameCountUseCase(currentFilter),
+            // Raw, non-debounced query so the search field always echoes what was just typed.
+            // Using `currentFilter.query` here instead would tie the *displayed* text to the same
+            // 250ms debounce/DB round-trip that throttles `names`/`count`, so the field would
+            // never catch up while the user is actively typing (it looked like input was ignored).
+            query
+        ) { names, count, rawQuery ->
             NameListUiState(
                 names = names,
                 count = count,
-                query = currentFilter.query,
+                query = rawQuery,
                 selectedGender = currentFilter.gender,
                 selectedInitial = currentFilter.initial
             )

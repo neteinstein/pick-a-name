@@ -7,21 +7,29 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Female
@@ -47,15 +55,26 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
@@ -65,6 +84,7 @@ import org.neteinstein.pickaname.domain.model.NameEntry
 import org.neteinstein.pickaname.presentation.common.GenderTag
 import org.neteinstein.pickaname.presentation.theme.PickANameExtendedColors
 import org.neteinstein.pickaname.presentation.theme.PickANameTheme
+import kotlin.math.roundToInt
 
 /**
  * Main screen: the full names list with gender/initial filters and a live match count. Reachable
@@ -82,6 +102,13 @@ fun NameListScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val autoRefreshFailedMessage = stringResource(R.string.name_list_auto_refresh_failed)
+    val listState = rememberLazyListState()
+
+    // The fast scroller only makes sense over the full alphabetical list: with a single
+    // initial selected there's only ever one letter on screen, so jumping between letters
+    // has nothing to do.
+    val letterIndex = remember(uiState.names) { buildLetterIndex(uiState.names) }
+    val showLetterScroller = uiState.selectedInitial == null && letterIndex.size > 1
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -170,13 +197,31 @@ fun NameListScreen(
                 if (isEmpty) {
                     EmptyState()
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(uiState.names, key = { it.id }) { entry ->
-                            NameRow(entry, modifier = Modifier.animateItem())
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                start = 16.dp,
+                                top = 8.dp,
+                                end = if (showLetterScroller) 32.dp else 16.dp,
+                                bottom = 8.dp
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(uiState.names, key = { it.id }) { entry ->
+                                NameRow(entry, modifier = Modifier.animateItem())
+                            }
+                        }
+
+                        if (showLetterScroller) {
+                            LetterFastScroller(
+                                letterIndex = letterIndex,
+                                listState = listState,
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .fillMaxHeight()
+                            )
                         }
                     }
                 }
@@ -329,6 +374,141 @@ private fun InitialFilterRow(selected: Char?, onSelected: (Char?) -> Unit) {
                 onClick = { onSelected(letter) },
                 label = { Text(letter.toString()) }
             )
+        }
+    }
+}
+
+/** First index of each initial letter in [names], in the order the letters first appear. */
+private fun buildLetterIndex(names: List<NameEntry>): Map<Char, Int> {
+    val firstIndexByLetter = linkedMapOf<Char, Int>()
+    names.forEachIndexed { index, entry ->
+        val letter = entry.name.firstOrNull()?.uppercaseChar() ?: return@forEachIndexed
+        firstIndexByLetter.getOrPut(letter) { index }
+    }
+    return firstIndexByLetter
+}
+
+private val FAST_SCROLLER_LETTERS = ('A'..'Z').toList()
+
+/**
+ * Nearest letter to [from] that actually has entries, so touching a gap in the alphabet (e.g. no
+ * names start with "K") still jumps somewhere useful instead of doing nothing.
+ */
+private fun nearestAvailableLetter(from: Char, letterIndex: Map<Char, Int>): Char? {
+    if (letterIndex.containsKey(from)) return from
+    for (offset in 1 until FAST_SCROLLER_LETTERS.size) {
+        val after = from + offset
+        if (after <= 'Z' && letterIndex.containsKey(after)) return after
+        val before = from - offset
+        if (before >= 'A' && letterIndex.containsKey(before)) return before
+    }
+    return null
+}
+
+/**
+ * A-Z fast-scroll rail pinned to the trailing edge of the name list, styled after the Google
+ * Photos date scrubber: press or drag anywhere along it to jump straight to that letter's
+ * section, with a floating bubble echoing the letter under the finger while touched.
+ */
+@Composable
+private fun LetterFastScroller(
+    letterIndex: Map<Char, Int>,
+    listState: LazyListState,
+    modifier: Modifier = Modifier
+) {
+    var activeLetter by remember { mutableStateOf<Char?>(null) }
+    var scrollTargetIndex by remember { mutableStateOf<Int?>(null) }
+    var touchYPx by remember { mutableFloatStateOf(0f) }
+    var stripHeightPx by remember { mutableFloatStateOf(0f) }
+    val haptics = LocalHapticFeedback.current
+    val fastScrollerDescription = stringResource(R.string.cd_letter_fast_scroller)
+
+    LaunchedEffect(scrollTargetIndex) {
+        scrollTargetIndex?.let { listState.scrollToItem(it) }
+    }
+
+    fun handleTouch(y: Float) {
+        touchYPx = y
+        if (stripHeightPx <= 0f) return
+        val fraction = (y / stripHeightPx).coerceIn(0f, 0.9999f)
+        val rawLetter = FAST_SCROLLER_LETTERS[(fraction * FAST_SCROLLER_LETTERS.size).toInt()]
+        val resolvedLetter = nearestAvailableLetter(rawLetter, letterIndex) ?: return
+        if (resolvedLetter != activeLetter) {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+        activeLetter = resolvedLetter
+        scrollTargetIndex = letterIndex[resolvedLetter]
+    }
+
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(20.dp)
+                .semantics { contentDescription = fastScrollerDescription }
+                .background(
+                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
+                    RoundedCornerShape(10.dp)
+                )
+                .onSizeChanged { stripHeightPx = it.height.toFloat() }
+                .pointerInput(letterIndex) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        down.consume()
+                        handleTouch(down.position.y)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) break
+                            change.consume()
+                            handleTouch(change.position.y)
+                        }
+                        activeLetter = null
+                        scrollTargetIndex = null
+                    }
+                },
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            FAST_SCROLLER_LETTERS.forEach { letter ->
+                val isAvailable = letterIndex.containsKey(letter)
+                Text(
+                    text = letter.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (activeLetter == letter) FontWeight.Bold else FontWeight.Normal,
+                    color = when {
+                        activeLetter == letter -> MaterialTheme.colorScheme.primary
+                        isAvailable -> MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                    }
+                )
+            }
+        }
+
+        activeLetter?.let { letter ->
+            val bubbleSizePx = with(LocalDensity.current) { 56.dp.roundToPx() }
+            val gapPx = with(LocalDensity.current) { 8.dp.roundToPx() }
+            Box(
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            x = -(bubbleSizePx + gapPx),
+                            y = (touchYPx - bubbleSizePx / 2f)
+                                .roundToInt()
+                                .coerceIn(0, (stripHeightPx - bubbleSizePx).toInt().coerceAtLeast(0))
+                        )
+                    }
+                    .size(56.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = letter.toString(),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
