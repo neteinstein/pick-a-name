@@ -25,7 +25,22 @@
     <string name="gender_male">Masculino</string>
     <string name="name_list_empty_state">Nenhum nome corresponde aos filtros selecionados.</string>
     <string name="name_list_auto_refresh_failed">Não foi possível atualizar a lista de nomes. Tentaremos novamente na próxima vez que abrir a aplicação.</string>
+    <string name="name_rules_title">Regras dos nomes em Portugal</string>
+    <string name="name_rules_intro">Estas são as principais regras, no estilo do IRN, usadas pelo registo civil para decidir se um nome próprio pode ser aceite em Portugal.</string>
+    <string name="name_rules_main_section">Regras principais</string>
+    <string name="name_rules_rule_1">O nome completo pode ter até seis vocábulos: normalmente até dois nomes próprios e até quatro apelidos; conectores curtos como “de”, “da”, “do” ou “e” não contam, em regra, para este limite.</string>
+    <string name="name_rules_rule_2">Os nomes próprios devem, em geral, pertencer ao uso português ou estar adaptados à ortografia e à pronúncia portuguesas.</string>
+    <string name="name_rules_rule_3">O primeiro nome próprio, em regra, não deve criar dúvidas sobre o sexo da criança segundo as normas do registo civil português.</string>
+    <string name="name_rules_rule_4">O mesmo primeiro nome próprio normalmente não se repete entre irmãos, salvo se ficar distinguido num nome composto ou se se aplicar outra exceção do registo.</string>
+    <string name="name_rules_rule_5">Os apelidos devem vir dos pais da criança ou de linhas familiares que possam ser legalmente comprovadas.</string>
+    <string name="name_rules_rule_6">A decisão final cabe à conservatória, que verifica a lista oficial, a grafia usada e o contexto familiar ou de nacionalidade da criança.</string>
+    <string name="name_rules_foreign_section">Porque surgem agora mais nomes estrangeiros</string>
+    <string name="name_rules_foreign_1">Portugal aceita hoje mais grafias estrangeiras originais quando a criança tem outra nacionalidade, nasceu no estrangeiro, ou tem um progenitor com nacionalidade estrangeira ou dupla nacionalidade.</string>
+    <string name="name_rules_foreign_2">Como há mais famílias com ligações internacionais, muitos nomes já não precisam de ser totalmente adaptados à grafia portuguesa antes de serem aprovados.</string>
+    <string name="name_rules_foreign_3">É por isso que a lista oficial pode parecer mais internacional atualmente, embora cada nome continue a ser analisado segundo as regras legais.</string>
+    <string name="name_rules_footer">Nos casos invulgares ou de fronteira, a resposta definitiva cabe sempre ao registo civil / IRN.</string>
     <string name="cd_settings_icon">Definições</string>
+    <string name="cd_name_rules_icon">Regras dos nomes</string>
     <string name="cd_clear_search">Limpar pesquisa</string>
     <string name="cd_letter_fast_scroller">Arraste para saltar para uma letra</string>
 

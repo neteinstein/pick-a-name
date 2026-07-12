@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,6 +35,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -45,6 +48,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -103,6 +107,7 @@ fun NameListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val autoRefreshFailedMessage = stringResource(R.string.name_list_auto_refresh_failed)
     val listState = rememberLazyListState()
+    var showRulesSheet by remember { mutableStateOf(false) }
 
     // The fast scroller only makes sense over the full alphabetical list: with a single
     // initial selected there's only ever one letter on screen, so jumping between letters
@@ -118,6 +123,12 @@ fun NameListScreen(
         }
     }
 
+    if (showRulesSheet) {
+        ModalBottomSheet(onDismissRequest = { showRulesSheet = false }) {
+            RulesBottomSheetContent()
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -129,6 +140,12 @@ fun NameListScreen(
                     )
                 },
                 actions = {
+                    IconButton(onClick = { showRulesSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.HelpOutline,
+                            contentDescription = stringResource(R.string.cd_name_rules_icon)
+                        )
+                    }
                     IconButton(onClick = onOpenSettings) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -226,6 +243,73 @@ fun NameListScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RulesBottomSheetContent() {
+    val mainRules = listOf(
+        stringResource(R.string.name_rules_rule_1),
+        stringResource(R.string.name_rules_rule_2),
+        stringResource(R.string.name_rules_rule_3),
+        stringResource(R.string.name_rules_rule_4),
+        stringResource(R.string.name_rules_rule_5),
+        stringResource(R.string.name_rules_rule_6)
+    )
+    val foreignNameReasons = listOf(
+        stringResource(R.string.name_rules_foreign_1),
+        stringResource(R.string.name_rules_foreign_2),
+        stringResource(R.string.name_rules_foreign_3)
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.name_rules_title),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = stringResource(R.string.name_rules_intro),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        RulesSection(
+            title = stringResource(R.string.name_rules_main_section),
+            items = mainRules
+        )
+        RulesSection(
+            title = stringResource(R.string.name_rules_foreign_section),
+            items = foreignNameReasons
+        )
+        Text(
+            text = stringResource(R.string.name_rules_footer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun RulesSection(title: String, items: List<String>) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        items.forEach { item ->
+            Text(
+                text = "• $item",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
