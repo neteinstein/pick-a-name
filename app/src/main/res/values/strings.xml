@@ -1,24 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pick A Name</string>
-    <string name="names_allowed_male">Male</string>
-    <string name="names_allowed_female">Female</string>
-    
-    <!-- Name List Screen -->
-    <string name="name_list_title">Pick A Name</string>
-    <string name="name_list_search_hint">Filter names...</string>
-    <string name="name_list_empty">No names found</string>
-    <string name="name_list_loading">Loading...</string>
-    <string name="name_list_error">Error: %s</string>
-    
-    <!-- Name Details Screen -->
-    <string name="name_details_title">Name Details</string>
-    <string name="name_details_name_label">Name</string>
-    <string name="name_details_gender_label">Gender</string>
-    <string name="name_details_notes_label">Notes</string>
-    <string name="name_details_error">Error: %s</string>
-    
+    <!-- App identity (also used as the splash screen title) -->
+    <string name="app_name">Allowed Names in Portugal</string>
+    <string name="splash_tagline">Official list of legally approved Portuguese first names</string>
+
+    <!-- Sync / loading screen -->
+    <string name="sync_loading_title">Loading names…</string>
+    <string name="sync_loading_message">We\'re downloading and preparing the official list of Portuguese names. This only takes a moment.</string>
+    <string name="sync_error_title">Something went wrong</string>
+    <string name="sync_error_network">Couldn\'t reach the names source. Check your internet connection and try again.</string>
+    <string name="sync_error_invalid_source">The configured source doesn\'t look like a valid names list.</string>
+    <string name="sync_error_no_names_found">No names were found in the configured source.</string>
+    <string name="sync_error_unknown">An unexpected error occurred.</string>
+    <string name="sync_retry">Retry</string>
+    <string name="sync_edit_source">Edit source</string>
+
+    <!-- Name list screen -->
+    <string name="name_list_search_hint">Search names</string>
+    <string name="filter_section_gender">Gender</string>
+    <string name="filter_section_initial">Initial</string>
+    <string name="filter_gender_all">All</string>
+    <string name="filter_initial_all">All</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_male">Male</string>
+    <string name="name_list_empty_state">No names match your filters.</string>
+    <string name="cd_settings_icon">Settings</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language_section">Language</string>
+    <string name="settings_language_description">Allowed Names in Portugal follows your device language. Tap below to change it in the Android settings.</string>
+    <string name="settings_language_button">Change app language</string>
+    <string name="settings_source_section">Names source</string>
+    <string name="settings_source_description">URL of the PDF document listing the officially approved Portuguese first names.</string>
+    <string name="settings_source_url_label">Source URL</string>
+    <string name="settings_source_url_error">Enter a valid http(s) URL</string>
+    <string name="settings_save">Save &amp; reload</string>
+    <string name="settings_reset">Reset to default</string>
+
     <!-- Common -->
-    <string name="back">Back</string>
-    <string name="search">Search</string>
+    <string name="cd_back">Back</string>
+
+    <!-- Plurals -->
+    <plurals name="name_count">
+        <item quantity="one">%d name</item>
+        <item quantity="other">%d names</item>
+    </plurals>
 </resources>
