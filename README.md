@@ -43,3 +43,11 @@ di/             Koin modules wiring the above together
 ./gradlew lintDebug         # run Android Lint
 ```
 
+## Privacy
+
+The app does not collect any personal data — see [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for
+details.
+
+(PT) A app não recolhe quaisquer dados pessoais — consulte
+[PRIVACY_POLICY.md](PRIVACY_POLICY.md) para mais detalhes.
+
