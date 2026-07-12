@@ -13,6 +13,11 @@ Runs on every pull request to `main` or `master` branch:
 - **Instrumented Tests**: Runs UI tests on an Android emulator
 - **Build**: Builds debug APK
 
+Lint and Unit Tests run as two legs of the same matrix job so they execute in parallel; the
+matrix's `fail-fast` behavior means that as soon as one of them fails, the other is cancelled
+instead of running to completion, saving CI time on a PR that's already broken. Instrumented
+Tests and Build only start once both have passed.
+
 All jobs must pass before a PR can be merged.
 
 ### 2. Release (`release.yml`)
@@ -100,9 +105,8 @@ Test workflows locally using [act](https://github.com/nektos/act):
 # Install act
 brew install act
 
-# Run PR checks
-act pull_request -j lint
-act pull_request -j unit-tests
+# Run PR checks (matrix job - runs both the lint and unit-tests legs)
+act pull_request -j checks
 
 # Run release workflow
 act push -j build-release
