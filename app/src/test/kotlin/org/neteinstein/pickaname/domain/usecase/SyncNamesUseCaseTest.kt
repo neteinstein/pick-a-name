@@ -9,30 +9,39 @@ import org.junit.Test
 import org.neteinstein.pickaname.domain.model.SyncFailureReason
 import org.neteinstein.pickaname.domain.model.SyncOutcome
 import org.neteinstein.pickaname.domain.repository.NameSyncRepository
+import org.neteinstein.pickaname.domain.repository.SettingsRepository
 
 class SyncNamesUseCaseTest {
 
     private val nameSyncRepository: NameSyncRepository = mockk()
-    private val useCase = SyncNamesUseCase(nameSyncRepository)
+    private val settingsRepository: SettingsRepository = mockk(relaxed = true)
+    private val fixedNow = 1_700_000_000_000L
+
+    private val useCase = SyncNamesUseCase(
+        nameSyncRepository = nameSyncRepository,
+        settingsRepository = settingsRepository,
+        currentTimeMillis = { fixedNow }
+    )
+
     private val url = "https://example.com/list.pdf"
 
     @Test
-    fun `delegates to the sync repository and returns its success outcome`() = runTest {
-        coEvery { nameSyncRepository.syncFromUrl(url) } returns SyncOutcome.Success(namesLoaded = 42)
+    fun `stamps the last-refresh timestamp when the sync succeeds`() = runTest {
+        coEvery { nameSyncRepository.syncFromUrl(url) } returns SyncOutcome.Success(namesLoaded = 10)
 
-        val result = useCase(url)
+        val outcome = useCase(url)
 
-        assertThat(result).isEqualTo(SyncOutcome.Success(namesLoaded = 42))
-        coVerify(exactly = 1) { nameSyncRepository.syncFromUrl(url) }
+        assertThat(outcome).isEqualTo(SyncOutcome.Success(namesLoaded = 10))
+        coVerify(exactly = 1) { settingsRepository.setLastRefreshTimestamp(fixedNow) }
     }
 
     @Test
-    fun `returns the sync repository's error outcome unchanged`() = runTest {
-        coEvery { nameSyncRepository.syncFromUrl(url) } returns
-            SyncOutcome.Error(SyncFailureReason.NETWORK, "boom")
+    fun `does not stamp the last-refresh timestamp when the sync fails`() = runTest {
+        coEvery { nameSyncRepository.syncFromUrl(url) } returns SyncOutcome.Error(SyncFailureReason.NETWORK)
 
-        val result = useCase(url)
+        val outcome = useCase(url)
 
-        assertThat(result).isEqualTo(SyncOutcome.Error(SyncFailureReason.NETWORK, "boom"))
+        assertThat(outcome).isEqualTo(SyncOutcome.Error(SyncFailureReason.NETWORK))
+        coVerify(exactly = 0) { settingsRepository.setLastRefreshTimestamp(any()) }
     }
 }

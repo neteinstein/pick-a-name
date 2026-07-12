@@ -24,6 +24,7 @@
     <string name="gender_female">Female</string>
     <string name="gender_male">Male</string>
     <string name="name_list_empty_state">No names match your filters.</string>
+    <string name="name_list_auto_refresh_failed">Couldn\'t update the names list. We\'ll try again next time you open the app.</string>
     <string name="cd_settings_icon">Settings</string>
 
     <!-- Settings screen -->
@@ -37,6 +38,16 @@
     <string name="settings_source_url_error">Enter a valid http(s) URL</string>
     <string name="settings_save">Save &amp; reload</string>
     <string name="settings_reset">Reset to default</string>
+
+    <!-- Settings screen: automatic refresh -->
+    <string name="settings_refresh_section">Automatic refresh</string>
+    <string name="settings_refresh_description">How often the app should automatically check the source for an updated names list.</string>
+    <string name="settings_refresh_period_label">Refresh frequency</string>
+    <string name="refresh_period_weekly">Weekly</string>
+    <string name="refresh_period_monthly">Monthly</string>
+    <string name="refresh_period_quarterly">Quarterly (3 months)</string>
+    <string name="refresh_period_bi_yearly">Bi-yearly (6 months)</string>
+    <string name="refresh_period_yearly">Yearly</string>
 
     <!-- Common -->
     <string name="cd_back">Back</string>

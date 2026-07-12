@@ -11,8 +11,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.neteinstein.pickaname.domain.model.NamesSourceDefaults
+import org.neteinstein.pickaname.domain.model.RefreshPeriod
+import org.neteinstein.pickaname.domain.usecase.GetRefreshPeriodUseCase
 import org.neteinstein.pickaname.domain.usecase.GetSourceUrlUseCase
 import org.neteinstein.pickaname.domain.usecase.ResetSourceUrlUseCase
+import org.neteinstein.pickaname.domain.usecase.UpdateRefreshPeriodUseCase
 import org.neteinstein.pickaname.domain.usecase.UpdateSourceUrlUseCase
 import org.neteinstein.pickaname.util.MainDispatcherRule
 
@@ -25,10 +28,19 @@ class SettingsViewModelTest {
     private val getSourceUrlUseCase: GetSourceUrlUseCase = mockk()
     private val updateSourceUrlUseCase: UpdateSourceUrlUseCase = mockk()
     private val resetSourceUrlUseCase: ResetSourceUrlUseCase = mockk()
+    private val getRefreshPeriodUseCase: GetRefreshPeriodUseCase = mockk()
+    private val updateRefreshPeriodUseCase: UpdateRefreshPeriodUseCase = mockk(relaxed = true)
 
-    private fun createViewModel(): SettingsViewModel {
+    private fun createViewModel(refreshPeriod: RefreshPeriod = RefreshPeriod.DEFAULT): SettingsViewModel {
         coEvery { getSourceUrlUseCase() } returns "https://current.example.com/list.pdf"
-        return SettingsViewModel(getSourceUrlUseCase, updateSourceUrlUseCase, resetSourceUrlUseCase)
+        coEvery { getRefreshPeriodUseCase() } returns refreshPeriod
+        return SettingsViewModel(
+            getSourceUrlUseCase,
+            updateSourceUrlUseCase,
+            resetSourceUrlUseCase,
+            getRefreshPeriodUseCase,
+            updateRefreshPeriodUseCase
+        )
     }
 
     @Test
@@ -38,6 +50,21 @@ class SettingsViewModelTest {
 
         assertThat(viewModel.uiState.value.sourceUrl).isEqualTo("https://current.example.com/list.pdf")
         assertThat(viewModel.uiState.value.urlError).isFalse()
+    }
+
+    @Test
+    fun `loads the currently configured refresh period on init`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel(refreshPeriod = RefreshPeriod.QUARTERLY)
+        runCurrent()
+
+        assertThat(viewModel.uiState.value.refreshPeriod).isEqualTo(RefreshPeriod.QUARTERLY)
+    }
+
+    @Test
+    fun `defaults the refresh period to yearly before it loads`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+
+        assertThat(viewModel.uiState.value.refreshPeriod).isEqualTo(RefreshPeriod.YEARLY)
     }
 
     @Test
@@ -102,5 +129,17 @@ class SettingsViewModelTest {
         }
         assertThat(viewModel.uiState.value.sourceUrl).isEqualTo(NamesSourceDefaults.DEFAULT_SOURCE_URL)
         coVerify(exactly = 1) { resetSourceUrlUseCase() }
+    }
+
+    @Test
+    fun `selecting a refresh period updates state immediately and persists it`() = runTest(mainDispatcherRule.dispatcher) {
+        val viewModel = createViewModel()
+        runCurrent()
+
+        viewModel.onRefreshPeriodSelected(RefreshPeriod.WEEKLY)
+
+        assertThat(viewModel.uiState.value.refreshPeriod).isEqualTo(RefreshPeriod.WEEKLY)
+        runCurrent()
+        coVerify(exactly = 1) { updateRefreshPeriodUseCase(RefreshPeriod.WEEKLY) }
     }
 }

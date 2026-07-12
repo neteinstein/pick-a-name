@@ -24,6 +24,7 @@
     <string name="gender_female">Feminino</string>
     <string name="gender_male">Masculino</string>
     <string name="name_list_empty_state">Nenhum nome corresponde aos filtros selecionados.</string>
+    <string name="name_list_auto_refresh_failed">Não foi possível atualizar a lista de nomes. Tentaremos novamente na próxima vez que abrir a aplicação.</string>
     <string name="cd_settings_icon">Definições</string>
 
     <!-- Ecrã de definições -->
@@ -37,6 +38,16 @@
     <string name="settings_source_url_error">Introduza um URL http(s) válido</string>
     <string name="settings_save">Guardar e recarregar</string>
     <string name="settings_reset">Repor predefinição</string>
+
+    <!-- Ecrã de definições: atualização automática -->
+    <string name="settings_refresh_section">Atualização automática</string>
+    <string name="settings_refresh_description">Com que frequência a aplicação deve verificar automaticamente se existe uma lista de nomes atualizada.</string>
+    <string name="settings_refresh_period_label">Frequência de atualização</string>
+    <string name="refresh_period_weekly">Semanalmente</string>
+    <string name="refresh_period_monthly">Mensalmente</string>
+    <string name="refresh_period_quarterly">Trimestralmente (3 meses)</string>
+    <string name="refresh_period_bi_yearly">Semestralmente (6 meses)</string>
+    <string name="refresh_period_yearly">Anualmente</string>
 
     <!-- Comum -->
     <string name="cd_back">Voltar</string>

@@ -24,10 +24,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -43,7 +47,9 @@ import org.neteinstein.pickaname.presentation.common.GenderTag
 
 /**
  * Main screen: the full names list with gender/initial filters and a live match count. Reachable
- * only once the database has been populated (splash routes elsewhere otherwise).
+ * only once the database has been populated (splash routes elsewhere otherwise). On entry, the
+ * view model runs the periodic auto-refresh check silently; if it fails, a Snackbar reports it
+ * without disturbing the (still valid) data already on screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,8 +58,19 @@ fun NameListScreen(
     viewModel: NameListViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val autoRefreshFailedMessage = stringResource(R.string.name_list_auto_refresh_failed)
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is NameListEvent.AutoRefreshFailed -> snackbarHostState.showSnackbar(autoRefreshFailedMessage)
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
