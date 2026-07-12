@@ -1,9 +1,0 @@
-🎉 Complete app modernization!
-
-• Migrated to Kotlin with MVVM architecture
-• Modern UI with Jetpack Compose and Material3
-• Improved performance and stability
-• Comprehensive test coverage
-• Enhanced user experience
-
-Enjoy the new and improved Pick A Name!
