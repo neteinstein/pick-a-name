@@ -1,0 +1,101 @@
+package org.neteinstein.pickaname.data.repository
+
+import app.cash.turbine.test
+import com.google.common.truth.Truth.assertThat
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+import org.neteinstein.pickaname.data.local.database.NameDao
+import org.neteinstein.pickaname.data.local.database.NameEntity
+import org.neteinstein.pickaname.domain.model.Gender
+import org.neteinstein.pickaname.domain.model.NameEntry
+import org.neteinstein.pickaname.domain.model.NameFilter
+
+class NameRepositoryImplTest {
+
+    private val nameDao: NameDao = mockk()
+    private val repository = NameRepositoryImpl(nameDao)
+
+    private val aliceEntity = NameEntity(id = 1, name = "Alice", gender = "F", initialLetter = "A")
+    private val aliceEntry = NameEntry(id = 1, name = "Alice", gender = Gender.FEMALE)
+
+    @Test
+    fun `observeNames passes an unrestricted filter through as all-null dao params`() = runTest {
+        every { nameDao.observeNames(gender = null, initial = null, query = null) } returns
+            flowOf(listOf(aliceEntity))
+
+        repository.observeNames(NameFilter()).test {
+            assertThat(awaitItem()).containsExactly(aliceEntry)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeNames maps gender to its entity code and trims the query`() = runTest {
+        every { nameDao.observeNames(gender = "F", initial = null, query = "ali") } returns
+            flowOf(listOf(aliceEntity))
+
+        val filter = NameFilter(query = "  ali  ", gender = Gender.FEMALE)
+
+        repository.observeNames(filter).test {
+            assertThat(awaitItem()).containsExactly(aliceEntry)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeNames strips diacritics and upper-cases the initial before querying`() = runTest {
+        every { nameDao.observeNames(gender = null, initial = "A", query = null) } returns
+            flowOf(listOf(aliceEntity))
+
+        repository.observeNames(NameFilter(initial = 'á')).test {
+            assertThat(awaitItem()).containsExactly(aliceEntry)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeNames treats a blank query as no query restriction`() = runTest {
+        every { nameDao.observeNames(gender = null, initial = null, query = null) } returns
+            flowOf(emptyList())
+
+        repository.observeNames(NameFilter(query = "   ")).test {
+            assertThat(awaitItem()).isEmpty()
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeNameCount applies the same filter mapping as observeNames`() = runTest {
+        every { nameDao.observeCount(gender = "M", initial = null, query = "bob") } returns flowOf(1)
+
+        val filter = NameFilter(query = "bob", gender = Gender.MALE)
+
+        repository.observeNameCount(filter).test {
+            assertThat(awaitItem()).isEqualTo(1)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeIsEmpty is true only when the total row count is zero`() = runTest {
+        every { nameDao.observeTotalCount() } returns flowOf(0)
+
+        repository.observeIsEmpty().test {
+            assertThat(awaitItem()).isTrue()
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `observeIsEmpty is false once there is at least one row`() = runTest {
+        every { nameDao.observeTotalCount() } returns flowOf(5)
+
+        repository.observeIsEmpty().test {
+            assertThat(awaitItem()).isFalse()
+            awaitComplete()
+        }
+    }
+}
