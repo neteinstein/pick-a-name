@@ -1,0 +1,23 @@
+Nomes Permitidos em Portugal ajuda pais, futuros pais e curiosos a consultar, de forma rápida e mesmo sem ligação à internet, a lista oficial de nomes próprios legalmente permitidos para recém-nascidos em Portugal.
+
+A aplicação descarrega automaticamente a "Lista de Nomes Próprios" publicada pelo Instituto dos Registos e do Notariado (IRN) — a entidade oficial responsável pelo registo civil em Portugal — e organiza os dados numa lista simples de consultar.
+
+PRINCIPAIS FUNCIONALIDADES
+• Lista completa dos nomes próprios oficialmente aprovados
+• Pesquisa instantânea por nome
+• Filtro por género (feminino/masculino) e por letra inicial
+• Contagem de resultados atualizada em tempo real
+• Funciona offline depois da primeira sincronização
+• Atualização automática configurável (semanal, mensal, trimestral, semestral ou anual)
+• Fonte dos dados configurável nas Definições
+• Interface disponível em português e inglês, seguindo o idioma do dispositivo
+
+PRIVACIDADE EM PRIMEIRO LUGAR
+Esta aplicação não recolhe dados pessoais, não tem contas de utilizador, não mostra anúncios e não integra bibliotecas de analytics ou de rastreamento. A única ligação à internet é usada para descarregar a lista oficial de nomes. Consulte a nossa Política de Privacidade para mais detalhes.
+
+CÓDIGO ABERTO
+O código-fonte está disponível publicamente no GitHub, sob a licença Apache 2.0:
+github.com/neteinstein/portuguese-allowed-names
+
+AVISO
+Esta é uma aplicação não oficial e independente, sem qualquer afiliação com o IRN ou com o Governo de Portugal. Os dados apresentados baseiam-se no documento publicado pelo IRN e podem não refletir atualizações muito recentes à lista oficial; consulte sempre a fonte oficial do IRN para efeitos legais.
