@@ -17,6 +17,11 @@ concurrency:
 
 permissions:
   contents: write
+  # Needed for actions/setup-java's `cache: gradle` (backed by actions/cache) to save the
+  # Gradle cache at the end of each job. Once `permissions:` is declared, every unlisted
+  # scope defaults to `none`, so without this the cache-save step fails with
+  # "cache write denied: token has no writable scopes".
+  actions: write
 
 jobs:
   test:

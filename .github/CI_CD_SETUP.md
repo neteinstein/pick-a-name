@@ -175,7 +175,7 @@ The build.gradle.kts should define version:
 android {
     defaultConfig {
         versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = "2.2.0"
+        versionName = "2.2.1"
     }
 }
 ```
