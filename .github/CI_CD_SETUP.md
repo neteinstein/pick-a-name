@@ -35,8 +35,9 @@ merging does not trigger a release, and neither does a direct push that bypasses
 - **Generate Release Notes**: Automatically generates release notes from commits
 - **Create Release**: Creates a GitHub release (via `gh release create`) with the version tag,
   attaching both the signed APK and AAB
-- **Upload to Play Store**: currently **disabled** (`if: false` on the step) until Play Store
-  publishing is ready. Remove the `if: false` line to re-enable it.
+- **Upload to Play Store**: uploads the signed AAB to the Play Store **internal** testing track
+  (`track: internal`) via `PLAY_STORE_JSON_KEY`. It does not touch `production` or any other
+  track — promoting a build beyond internal testing is still a manual step in Play Console.
 
 ## Required Secrets
 
@@ -59,7 +60,7 @@ following secrets in GitHub:
 Without these four secrets, the `build-release` job fails intentionally at the "Decode
 Keystore" step instead of publishing an unsigned release.
 
-### Play Store Secrets (not currently used — upload step is disabled)
+### Play Store Secrets (required for the Upload to Play Store step)
 
 5. **PLAY_STORE_JSON_KEY**: Service account JSON key for Play Store API
    - Create a service account in Google Play Console
