@@ -17,11 +17,14 @@ concurrency:
 
 permissions:
   contents: write
-  # Needed for actions/setup-java's `cache: gradle` (backed by actions/cache) to save the
-  # Gradle cache at the end of each job. Once `permissions:` is declared, every unlisted
-  # scope defaults to `none`, so without this the cache-save step fails with
-  # "cache write denied: token has no writable scopes".
-  actions: write
+  # Note: the Gradle cache (actions/setup-java's `cache: gradle`) will still log a one-time
+  # "Failed to save ... cache write denied: token has no writable scopes" warning in the jobs
+  # below. That's expected and harmless here, not a permissions gap: this workflow triggers on
+  # `pull_request` `closed`, so its cache is scoped to that PR's merge ref
+  # (refs/pull/<n>/merge), which is no longer writable once the PR is closed. Restores from the
+  # base branch's cache still work; only the (low-value, since the ref is already gone) save is
+  # skipped. See https://github.com/actions/cache/blob/main/tips-and-workarounds.md. No
+  # `actions:` scope fixes this - that scope only governs the cache *delete* REST API.
 
 jobs:
   test:
@@ -211,6 +214,9 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
           packageName: org.neteinstein.pickaname
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: internal
+          tracks: internal
           status: completed
-          whatsNewDirectory: distribution/whatsnew
+          # No whatsNewDirectory here: distribution/whatsnew was deliberately deleted (no
+          # per-locale release notes are maintained), and pointing at a missing directory
+          # makes this action fail with ENOENT. The Play Store release still gets the
+          # GitHub release notes generated above.
