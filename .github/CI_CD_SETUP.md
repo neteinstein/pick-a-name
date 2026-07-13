@@ -27,9 +27,14 @@ Runs when a pull request targeting `main` or `master` is **merged** (`pull_reque
 merging does not trigger a release, and neither does a direct push that bypasses PR review:
 
 - **Test**: Runs lint and unit tests on release variant, against the actual merge commit
-- **Build Release**: Creates a signed APK and AAB bundle. The signing secrets below are
-  **required** — the job fails fast with a clear error if `KEYSTORE_BASE64` is missing, rather
-  than silently producing an unsigned build
+- **Bump patch version**: Auto-increments the PATCH component of `versionName`
+  (`MAJOR.MINOR.PATCH`) in `app/build.gradle.kts` and pushes that commit straight to the base
+  branch, before anything is built. This means `versionName` no longer needs a manual "bump
+  version" commit in every PR — MAJOR/MINOR are still bumped by hand when you want one, PATCH
+  bumps itself on every merge.
+- **Build Release**: Creates a signed APK and AAB bundle, using the version bumped above. The
+  signing secrets below are **required** — the job fails fast with a clear error if
+  `KEYSTORE_BASE64` is missing, rather than silently producing an unsigned build
 - **Verify APK signature**: Runs `apksigner verify` on the built APK so the workflow log always
   shows proof the artifact was actually signed (and with which certificate)
 - **Generate Release Notes**: Automatically generates release notes from commits
@@ -180,11 +185,15 @@ android {
 }
 ```
 
-`versionName` is a plain literal bumped by hand for each release. `versionCode` is read from a
-`-PversionCode=<n>` Gradle property so it can always be an ever-increasing integer; `release.yml`
-passes `-PversionCode=${{ github.run_number }}` when building the release APK/AAB, so every
-release build gets a unique, monotonically increasing code tied to its CI run. Local/dev builds
-that don't pass the property fall back to `1`.
+`versionName` is a plain literal in the repo, but you should treat it as owned by CI: the
+"Bump patch version" step in `release.yml` increments the PATCH segment and pushes the commit
+directly to the base branch on every merge, so day-to-day merges never need a manual edit.
+Bump MAJOR or MINOR by hand in a PR (e.g. `"2.3.0"`) only when you want to signal a bigger
+release; the next merge's automated bump will then continue from `2.3.1`, `2.3.2`, etc.
+`versionCode` is read from a `-PversionCode=<n>` Gradle property so it can always be an
+ever-increasing integer; `release.yml` passes `-PversionCode=${{ github.run_number }}` when
+building the release APK/AAB, so every release build gets a unique, monotonically increasing
+code tied to its CI run. Local/dev builds that don't pass the property fall back to `1`.
 
 `VERSION_NAME` is extracted from `build.gradle.kts` and used for release tagging; `VERSION_CODE`
 is taken directly from `github.run_number` (the same value passed to Gradle) rather than parsed
