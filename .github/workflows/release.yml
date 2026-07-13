@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: app/build/test-results/
@@ -169,15 +169,12 @@ jobs:
             --title "Release v$VERSION_NAME" \
             --notes "$RELEASE_NOTES"
 
-      - name: Upload to Google Play
-        # Disabled for now. Re-enable by deleting this `if: false` line when ready to
-        # publish to the Play Store (PLAY_STORE_JSON_KEY secret is still required).
-        if: false
+      - name: Upload to Google Play (Internal Track)
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
           packageName: org.neteinstein.pickaname
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: production
+          track: internal
           status: completed
           whatsNewDirectory: distribution/whatsnew

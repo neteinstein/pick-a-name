@@ -43,21 +43,21 @@ jobs:
         
       - name: Upload lint results
         if: always() && matrix.name == 'Lint Code'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: lint-results
           path: app/build/reports/lint-results-debug.html
           
       - name: Upload unit test results
         if: always() && matrix.name == 'Unit Tests'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-results
           path: app/build/test-results/testDebugUnitTest/
           
       - name: Upload unit test reports
         if: always() && matrix.name == 'Unit Tests'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-reports
           path: app/build/reports/tests/testDebugUnitTest/
@@ -102,14 +102,14 @@ jobs:
           
       - name: Upload instrumented test results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: instrumented-test-results
           path: app/build/outputs/androidTest-results/
           
       - name: Upload instrumented test reports
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: instrumented-test-reports
           path: app/build/reports/androidTests/
@@ -137,7 +137,7 @@ jobs:
         run: ./gradlew assembleDebug
         
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/*.apk
