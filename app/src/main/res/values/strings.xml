@@ -25,7 +25,22 @@
     <string name="gender_male">Male</string>
     <string name="name_list_empty_state">No names match your filters.</string>
     <string name="name_list_auto_refresh_failed">Couldn\'t update the names list. We\'ll try again next time you open the app.</string>
+    <string name="name_rules_title">Name rules in Portugal</string>
+    <string name="name_rules_intro">These are the main IRN-style rules the registry uses when deciding whether a first name can be accepted in Portugal.</string>
+    <string name="name_rules_main_section">Core rules</string>
+    <string name="name_rules_rule_1">A legal name can contain up to six words: usually up to two given names and up to four surnames; short connectors such as “de”, “da”, “do” or “e” normally do not count.</string>
+    <string name="name_rules_rule_2">Given names are generally expected to be part of Portuguese usage or adapted to Portuguese spelling and pronunciation.</string>
+    <string name="name_rules_rule_3">The first given name normally must not create doubt about the child\'s sex under the Portuguese civil registry rules.</string>
+    <string name="name_rules_rule_4">The exact same first given name is usually not repeated among siblings unless it is distinguished in a compound name or another registry exception applies.</string>
+    <string name="name_rules_rule_5">Surnames should come from the child\'s parents or family lines that can be legally documented.</string>
+    <string name="name_rules_rule_6">The civil registry office makes the final decision by checking the official list, the spelling used, and the family or nationality context of the child.</string>
+    <string name="name_rules_foreign_section">Why more foreign names appear now</string>
+    <string name="name_rules_foreign_1">Portugal now accepts more original foreign spellings when the child has another nationality, was born abroad, or has a parent with foreign nationality or dual nationality.</string>
+    <string name="name_rules_foreign_2">Because more families have international ties, many names no longer need to be fully adapted to Portuguese spelling before they are approved.</string>
+    <string name="name_rules_foreign_3">That is why the official list can look more international today even though the registry still reviews each name against legal rules.</string>
+    <string name="name_rules_footer">For unusual or borderline cases, the final answer always comes from the Portuguese civil registry / IRN.</string>
     <string name="cd_settings_icon">Settings</string>
+    <string name="cd_name_rules_icon">Name rules</string>
     <string name="cd_clear_search">Clear search</string>
     <string name="cd_letter_fast_scroller">Drag to jump to a letter</string>
 
