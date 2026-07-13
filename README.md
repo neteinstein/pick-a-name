@@ -1,5 +1,10 @@
 # Allowed Names in Portugal (Nomes Permitidos em Portugal)
 
+| Splash Screen | Name List | Name List | Settings |
+| :---: | :---: | :---: | :---: |
+| <img src="https://github.com/neteinstein/portuguese-allowed-names/blob/master/distribution/metadata/android/en-US/images/phoneScreenshots/1_splash.png" width="250" alt="Splash Screen" /> | <img src="https://github.com/neteinstein/portuguese-allowed-names/blob/master/distribution/metadata/android/en-US/images/phoneScreenshots/2_name_list.png" width="250" alt="Name List" /> | <img src="https://github.com/neteinstein/portuguese-allowed-names/blob/master/distribution/metadata/android/en-US/images/phoneScreenshots/3_name_list_filtered.png" width="250" alt="Filtered Name List" /> | <img src="https://github.com/neteinstein/portuguese-allowed-names/blob/master/distribution/metadata/android/en-US/images/phoneScreenshots/4_settings.png" width="250" alt="Settings" /> |
+
+
 An Android app that lists the first names legally allowed for newborns in Portugal, based on
 the official register published by the [Instituto dos Registos e do Notariado](https://irn.justica.gov.pt/en-gb/)
 (IRN). Browse the full list, filter it by gender or initial letter, and see the matching count
