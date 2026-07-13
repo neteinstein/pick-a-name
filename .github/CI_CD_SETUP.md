@@ -41,7 +41,7 @@ merging does not trigger a release, and neither does a direct push that bypasses
 - **Create Release**: Creates a GitHub release (via `gh release create`) with the version tag,
   attaching both the signed APK and AAB
 - **Upload to Play Store**: uploads the signed AAB to the Play Store **internal** testing track
-  (`track: internal`) via `PLAY_STORE_JSON_KEY`. It does not touch `production` or any other
+  (`tracks: internal`) via `PLAY_STORE_JSON_KEY`. It does not touch `production` or any other
   track — promoting a build beyond internal testing is still a manual step in Play Console.
 
 ## Required Secrets
@@ -106,16 +106,13 @@ Release notes are automatically generated from commit messages between tags. Fol
 
 ## WhatsNew Directory
 
-For Play Store releases, create `distribution/whatsnew/` directory with localized release notes:
-
-```
-distribution/
-  whatsnew/
-    en-US.txt  # English release notes
-    pt-PT.txt  # Portuguese release notes
-```
-
-Each file should contain release notes for that language (max 500 characters).
+Not currently used — `release.yml` relies solely on the auto-generated GitHub release notes
+(see [Release Notes](#release-notes) above) and does not pass `whatsNewDirectory` to the Play
+Store upload step. If you want localized "what's new" text on the Play Store listing itself,
+add a `distribution/whatsnew/` directory and wire `whatsNewDirectory: distribution/whatsnew`
+back into the upload step. Files must be named `whatsnew-<BCP 47 locale>` (e.g.
+`whatsnew-en-US`, `whatsnew-pt-PT` — no `.txt` extension), max 500 characters each. See the
+[`upload-google-play` README](https://github.com/r0adkll/upload-google-play#readme) for details.
 
 ## Store Listing Metadata
 
@@ -146,8 +143,8 @@ distribution/
 ```
 
 These files aren't uploaded automatically yet — the `upload-google-play` action wired up in
-`release.yml` only handles the release binary, `whatsNewDirectory`, and `mappingFile`, not the
-main store listing. Until that's automated (e.g. via `fastlane supply` or the
+`release.yml` only handles the release binary, not the main store listing. Until that's
+automated (e.g. via `fastlane supply` or the
 `triple-t/gradle-play-publisher` plugin), copy these values into Play Console manually. See
 [`distribution/STORE_LISTING.md`](../distribution/STORE_LISTING.md) for the full checklist of
 every field Play Console requires to create the listing, including the Console-only settings
