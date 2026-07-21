@@ -1,5 +1,8 @@
 package org.neteinstein.pickaname.presentation.namelist
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -34,12 +37,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +75,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
@@ -80,6 +86,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import org.neteinstein.pickaname.R
@@ -247,20 +254,41 @@ fun NameListScreen(
     }
 }
 
+/**
+ * Official Government of Portugal pages linked from the rules bottom sheet below. Kept as plain
+ * constants (not string resources) since URLs aren't translatable content.
+ */
+private const val NAME_RULES_URL =
+    "https://irn.justica.gov.pt/Servicos/Cidadao/Nascimento/Composicao-do-nome"
+private const val ALLOWED_NAMES_PDF_URL =
+    "https://irn.justica.gov.pt/Portals/33/Regras%20Nome%20Pr%C3%B3prio/Lista%20Nomes%20Pr%C3%B3prios.pdf?ver=WNDmmwiSO3uacofjmNoxEQ%3D%3D"
+private const val REGISTER_BIRTH_URL = "https://justica.gov.pt/Servicos/Registar-nascimento"
+
+private data class OfficialResourceLink(
+    val title: String,
+    val description: String,
+    val url: String
+)
+
 @Composable
 private fun RulesBottomSheetContent() {
-    val mainRules = listOf(
-        stringResource(R.string.name_rules_rule_1),
-        stringResource(R.string.name_rules_rule_2),
-        stringResource(R.string.name_rules_rule_3),
-        stringResource(R.string.name_rules_rule_4),
-        stringResource(R.string.name_rules_rule_5),
-        stringResource(R.string.name_rules_rule_6)
-    )
-    val foreignNameReasons = listOf(
-        stringResource(R.string.name_rules_foreign_1),
-        stringResource(R.string.name_rules_foreign_2),
-        stringResource(R.string.name_rules_foreign_3)
+    val context = LocalContext.current
+    val officialLinks = listOf(
+        OfficialResourceLink(
+            title = stringResource(R.string.name_rules_link_rules_title),
+            description = stringResource(R.string.name_rules_link_rules_description),
+            url = NAME_RULES_URL
+        ),
+        OfficialResourceLink(
+            title = stringResource(R.string.name_rules_link_pdf_title),
+            description = stringResource(R.string.name_rules_link_pdf_description),
+            url = ALLOWED_NAMES_PDF_URL
+        ),
+        OfficialResourceLink(
+            title = stringResource(R.string.name_rules_link_register_birth_title),
+            description = stringResource(R.string.name_rules_link_register_birth_description),
+            url = REGISTER_BIRTH_URL
+        )
     )
 
     Column(
@@ -281,14 +309,15 @@ private fun RulesBottomSheetContent() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        RulesSection(
-            title = stringResource(R.string.name_rules_main_section),
-            items = mainRules
-        )
-        RulesSection(
-            title = stringResource(R.string.name_rules_foreign_section),
-            items = foreignNameReasons
-        )
+        RulesDisclaimerCard(text = stringResource(R.string.name_rules_disclaimer))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            officialLinks.forEach { link ->
+                OfficialResourceLinkRow(
+                    link = link,
+                    onClick = { openUrl(context, link.url) }
+                )
+            }
+        }
         Text(
             text = stringResource(R.string.name_rules_footer),
             style = MaterialTheme.typography.bodySmall,
@@ -298,19 +327,71 @@ private fun RulesBottomSheetContent() {
 }
 
 @Composable
-private fun RulesSection(title: String, items: List<String>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+private fun RulesDisclaimerCard(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.WarningAmber,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondaryContainer
         )
-        items.forEach { item ->
-            Text(
-                text = "• $item",
-                style = MaterialTheme.typography.bodyMedium
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Composable
+private fun OfficialResourceLinkRow(link: OfficialResourceLink, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = link.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = link.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+/** Opens [url] in an external browser; silently no-ops if no app can handle it. */
+private fun openUrl(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+    } catch (e: ActivityNotFoundException) {
+        // No browser available on this device - nothing else we can do here.
     }
 }
 

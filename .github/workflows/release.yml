@@ -192,6 +192,9 @@ jobs:
           # -PversionCode passed to assembleRelease/bundleRelease above), so the run number
           # *is* the value that was just built into these artifacts, not something to re-derive.
           echo "VERSION_CODE=${{ github.run_number }}" >> $GITHUB_OUTPUT
+          # Underscore-separated version (e.g. 2.2.4 -> 2_2_4) used for the public asset file
+          # names below, per the AllowedPortugueseNames_vX_X_X.apk/.aab naming convention.
+          echo "VERSION_UNDERSCORE=${VERSION_NAME//./_}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         env:
@@ -200,11 +203,12 @@ jobs:
           # so that commit-message content in RELEASE_NOTES is treated as data, not shell
           # syntax — avoids a script-injection hole from untrusted commit/PR text.
           VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
+          VERSION_UNDERSCORE: ${{ steps.version.outputs.VERSION_UNDERSCORE }}
           RELEASE_NOTES: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
         run: |
           gh release create "v$VERSION_NAME" \
-            "app/build/outputs/apk/release/app-release.apk#pick-a-name-v$VERSION_NAME.apk" \
-            "app/build/outputs/bundle/release/app-release.aab#pick-a-name-v$VERSION_NAME.aab" \
+            "app/build/outputs/apk/release/app-release.apk#AllowedPortugueseNames_v${VERSION_UNDERSCORE}.apk" \
+            "app/build/outputs/bundle/release/app-release.aab#AllowedPortugueseNames_v${VERSION_UNDERSCORE}.aab" \
             --title "Release v$VERSION_NAME" \
             --notes "$RELEASE_NOTES"
 
