@@ -20,7 +20,14 @@ Tests and Build only start once both have passed.
 
 All jobs must pass before a PR can be merged.
 
-### 2. Release (`release.yml`)
+### 2. Warm Gradle Cache (`cache-warm.yml`)
+
+Runs on every `push` to `main` or `master` (i.e. right after a PR merges). Its only job is to
+build up a shared Gradle dependency cache under a well-known key while running in a trusted
+(read-write cache) context — see [Gradle cache](#gradle-cache) below for why `release.yml` can't
+do this itself.
+
+### 3. Release (`release.yml`)
 
 Runs when a pull request targeting `main` or `master` is **merged** (`pull_request` with
 `types: [closed]`, gated by `github.event.pull_request.merged == true`). Closing a PR without
@@ -43,6 +50,24 @@ merging does not trigger a release, and neither does a direct push that bypasses
 - **Upload to Play Store**: uploads the signed AAB to the Play Store **internal** testing track
   (`tracks: internal`) via `PLAY_STORE_JSON_KEY`. It does not touch `production` or any other
   track — promoting a build beyond internal testing is still a manual step in Play Console.
+  Passes `changesNotSentForReview: true`, because this Play Console account requires changes to
+  be sent for review manually rather than automatically on commit — without that flag the step
+  fails with `Changes cannot be sent for review automatically. Please set the query parameter
+  changesNotSentForReview to true.`. **This means every release still needs one manual step
+  after CI finishes**: open Play Console → Internal testing → and click "Send \[N\] changes for
+  review" (or "Publish") before the new build actually reaches testers.
+
+### Gradle cache
+
+`release.yml`'s jobs are triggered by `pull_request` `closed`, which (once merged) resolves its
+cache scope to the default branch. GitHub only ever issues those jobs a **read-only** cache
+token (see [this changelog
+post](https://github.blog/changelog/2026-06-26-read-only-actions-cache-for-untrusted-triggers/)),
+so they use restore-only `actions/cache/restore` steps with an explicit key/path instead of
+`actions/setup-java`'s `cache: gradle` (which would keep attempting, and failing, a save every
+run). `cache-warm.yml` runs on every `push` to `main`/`master` — a trigger that always keeps
+read-write cache access — purely to populate that same cache key so `release.yml`'s restores
+actually have something to hit.
 
 ## Required Secrets
 
