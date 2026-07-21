@@ -17,14 +17,16 @@ concurrency:
 
 permissions:
   contents: write
-  # Note: the Gradle cache (actions/setup-java's `cache: gradle`) will still log a one-time
-  # "Failed to save ... cache write denied: token has no writable scopes" warning in the jobs
-  # below. That's expected and harmless here, not a permissions gap: this workflow triggers on
-  # `pull_request` `closed`, so its cache is scoped to that PR's merge ref
-  # (refs/pull/<n>/merge), which is no longer writable once the PR is closed. Restores from the
-  # base branch's cache still work; only the (low-value, since the ref is already gone) save is
-  # skipped. See https://github.com/actions/cache/blob/main/tips-and-workarounds.md. No
-  # `actions:` scope fixes this - that scope only governs the cache *delete* REST API.
+  # Note on Gradle caching: this workflow is triggered by `pull_request` `closed`, and once a
+  # PR merges its cache scope resolves to the default branch. Per GitHub's read-only-cache
+  # policy for untrusted-triggerable events scoped to the default branch
+  # (https://github.blog/changelog/2026-06-26-read-only-actions-cache-for-untrusted-triggers/),
+  # jobs here only ever get a read-only cache token - no `permissions:` entry can grant a save
+  # here, so the jobs below deliberately use restore-only `actions/cache/restore` steps instead
+  # of actions/setup-java's `cache: gradle` (which would keep attempting - and failing - a save
+  # and logging "cache write denied: token has no writable scopes" every run). The actual cache
+  # is populated by the `push`-triggered cache-warm.yml workflow, which keeps full read-write
+  # access and saves the entries these jobs restore.
 
 jobs:
   test:
@@ -46,7 +48,19 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
+          # Restore-only (see the `permissions:` comment above): this job's token can't save a
+          # cache, so letting setup-java's own `cache: gradle` try would just fail every run.
+          cache: false
+
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -111,7 +125,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
+          # Restore-only - see the `permissions:` comment near the top of this file.
+          cache: false
+
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -220,6 +245,14 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           tracks: internal
           status: completed
+          # This Play Console account has managed publishing (or an equivalent review
+          # requirement) turned on, so the API refuses to auto-submit an edit for review and
+          # fails the commit with "Changes cannot be sent for review automatically. Please set
+          # the query parameter changesNotSentForReview to true.". Setting this to true commits
+          # the upload successfully; a maintainer still needs to open Play Console afterwards
+          # and hit "Send for review" (or "Publish") to make the build live on the internal
+          # track - see CI_CD_SETUP.md.
+          changesNotSentForReview: true
           # No whatsNewDirectory here: distribution/whatsnew was deliberately deleted (no
           # per-locale release notes are maintained), and pointing at a missing directory
           # makes this action fail with ENOENT. The Play Store release still gets the
