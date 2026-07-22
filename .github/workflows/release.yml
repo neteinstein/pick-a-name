@@ -50,7 +50,9 @@ jobs:
           java-version: '17'
           # Restore-only (see the `permissions:` comment above): this job's token can't save a
           # cache, so letting setup-java's own `cache: gradle` try would just fail every run.
-          cache: false
+          # The `cache` input is omitted entirely rather than set to `false` - setup-java only
+          # accepts a package-manager name (gradle/maven/sbt) here, so `cache: false` itself
+          # errors with "unknown package manager specified: false".
 
       - name: Restore Gradle cache
         uses: actions/cache/restore@v6
@@ -125,8 +127,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          # Restore-only - see the `permissions:` comment near the top of this file.
-          cache: false
+          # Restore-only - see the `permissions:` comment near the top of this file. The
+          # `cache` input is omitted (not set to `false` - setup-java rejects that with
+          # "unknown package manager specified: false"; it only accepts a package-manager name).
 
       - name: Restore Gradle cache
         uses: actions/cache/restore@v6
